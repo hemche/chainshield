@@ -9,7 +9,17 @@ vi.mock('@/lib/apis/goplus', () => ({
   clearGoPlusCache: vi.fn(),
 }));
 
+// Mock govlists module — default: error result so existing tests are unaffected.
+vi.mock('@/lib/apis/govlists', () => ({
+  checkDomainAgainstGovLists: vi.fn().mockResolvedValue({
+    found: false, source: null, entityName: null, category: null,
+    error: 'mocked',
+  }),
+  clearGovListCache: vi.fn(),
+}));
+
 import { fetchPhishingSite } from '@/lib/apis/goplus';
+import { checkDomainAgainstGovLists } from '@/lib/apis/govlists';
 
 // ---------------------------------------------------------------------------
 // Mock global fetch so no real HTTP calls are made.
@@ -22,6 +32,10 @@ beforeEach(() => {
     vi.fn().mockRejectedValue(new Error('mocked network error')),
   );
   vi.mocked(fetchPhishingSite).mockResolvedValue({ phishing: null, error: 'mocked' });
+  vi.mocked(checkDomainAgainstGovLists).mockResolvedValue({
+    found: false, source: null, entityName: null, category: null,
+    error: 'mocked',
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -727,13 +741,16 @@ describe('Minimum score floor', () => {
 // 17) checksPerformed array
 // =========================================================================
 describe('checksPerformed array', () => {
-  it('includes all 11 checks for non-trusted URLs', async () => {
+  it('includes all 12 checks for non-trusted URLs', async () => {
     vi.mocked(fetch).mockResolvedValueOnce(make200());
+    vi.mocked(checkDomainAgainstGovLists).mockResolvedValueOnce({
+      found: false, source: null, entityName: null, category: null, error: null,
+    });
 
     const report = await scanUrl('https://some-site.example');
 
     expect(report.checksPerformed).toBeDefined();
-    expect(report.checksPerformed!.length).toBe(11);
+    expect(report.checksPerformed!.length).toBe(12);
 
     const labels = report.checksPerformed!.map((c: CheckItem) => c.label);
     expect(labels).toContain('HTTPS encryption');
@@ -747,6 +764,7 @@ describe('checksPerformed array', () => {
     expect(labels).toContain('URL reachability');
     expect(labels).toContain('Domain-based URL');
     expect(labels).toContain('Phishing database (GoPlus)');
+    expect(labels).toContain('Government databases (ASIC/AMF)');
   });
 
   it('all checks pass for a clean reachable URL', async () => {
@@ -1110,5 +1128,136 @@ describe('GoPlus phishing database', () => {
     const findings = allFindings(report);
     expect(findings).toContain('GoPlus');
     expect(findings).toContain('scam-associated keywords');
+  });
+});
+
+// =========================================================================
+// 22) Government Regulatory Database Integration
+// =========================================================================
+describe('Government regulatory databases (ASIC/AMF)', () => {
+  it('flags URL when found in ASIC database', async () => {
+    vi.mocked(checkDomainAgainstGovLists).mockResolvedValueOnce({
+      found: true,
+      source: 'ASIC MoneySmart (Australia)',
+      entityName: 'Crypto Scam Corp',
+      category: 'Crypto asset',
+      error: null,
+    });
+
+    const report = await scanUrl('https://scam-crypto.example');
+
+    const govFinding = report.findings.find(f => f.message.includes('ASIC'));
+    expect(govFinding).toBeDefined();
+    expect(govFinding!.severity).toBe('high');
+    expect(govFinding!.message).toContain('Crypto Scam Corp');
+    expect(govFinding!.message).toContain('Crypto asset');
+
+    const meta = report.metadata as UrlMetadata;
+    expect(meta.govChecked).toBe(true);
+    expect(meta.govFlaggedAsic).toBe(true);
+    expect(meta.govSource).toBe('ASIC MoneySmart (Australia)');
+
+    const govCheck = report.checksPerformed!.find(c => c.label.includes('ASIC'));
+    expect(govCheck).toBeDefined();
+    expect(govCheck!.passed).toBe(false);
+  });
+
+  it('flags URL when found in AMF database', async () => {
+    vi.mocked(checkDomainAgainstGovLists).mockResolvedValueOnce({
+      found: true,
+      source: 'AMF France',
+      entityName: 'fraud-forex.fr',
+      category: 'Forex',
+      error: null,
+    });
+
+    const report = await scanUrl('https://fraud-forex.fr');
+
+    const govFinding = report.findings.find(f => f.message.includes('AMF'));
+    expect(govFinding).toBeDefined();
+    expect(govFinding!.severity).toBe('high');
+
+    const meta = report.metadata as UrlMetadata;
+    expect(meta.govFlaggedAmf).toBe(true);
+  });
+
+  it('adds info finding when domain is not in gov databases', async () => {
+    vi.mocked(checkDomainAgainstGovLists).mockResolvedValueOnce({
+      found: false, source: null, entityName: null, category: null, error: null,
+    });
+    vi.mocked(fetch).mockResolvedValueOnce(make200());
+
+    const report = await scanUrl('https://clean-domain.example');
+
+    const infoFinding = report.findings.find(f => f.message.includes('Not found in ASIC or AMF'));
+    expect(infoFinding).toBeDefined();
+    expect(infoFinding!.severity).toBe('info');
+
+    const meta = report.metadata as UrlMetadata;
+    expect(meta.govChecked).toBe(true);
+    expect(meta.govFlaggedAsic).toBeUndefined();
+
+    const govCheck = report.checksPerformed!.find(c => c.label.includes('ASIC'));
+    expect(govCheck!.passed).toBe(true);
+  });
+
+  it('degrades gracefully when gov databases are unavailable', async () => {
+    vi.mocked(checkDomainAgainstGovLists).mockResolvedValueOnce({
+      found: false, source: null, entityName: null, category: null,
+      error: 'Government databases unavailable',
+    });
+    vi.mocked(fetch).mockResolvedValueOnce(make200());
+
+    const report = await scanUrl('https://any-site.example');
+
+    // No gov finding should be added
+    const govFinding = report.findings.find(f => f.message.includes('ASIC') || f.message.includes('AMF'));
+    expect(govFinding).toBeUndefined();
+
+    // Check still appears but shows unavailable
+    const govCheck = report.checksPerformed!.find(c => c.label.includes('ASIC'));
+    expect(govCheck).toBeDefined();
+    expect(govCheck!.detail).toContain('unavailable');
+  });
+
+  it('skips gov check for trusted domains', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(make200());
+
+    const report = await scanUrl('https://www.google.com');
+
+    // Trusted domains skip gov check — no gov check in checksPerformed
+    const govCheck = report.checksPerformed!.find(c => c.label.includes('ASIC'));
+    expect(govCheck).toBeUndefined();
+
+    expect(report.riskLevel).toBe('SAFE');
+  });
+
+  it('gov flag stacks with GoPlus phishing flag', async () => {
+    vi.mocked(fetchPhishingSite).mockResolvedValueOnce({ phishing: 1, error: null });
+    vi.mocked(checkDomainAgainstGovLists).mockResolvedValueOnce({
+      found: true,
+      source: 'ASIC MoneySmart (Australia)',
+      entityName: 'Double Scam',
+      category: 'Crypto',
+      error: null,
+    });
+
+    const report = await scanUrl('https://double-flagged.xyz');
+
+    const findings = allFindings(report);
+    expect(findings).toContain('GoPlus');
+    expect(findings).toContain('ASIC');
+    expect(report.riskLevel).toBe('DANGEROUS');
+  });
+
+  it('updates confidence reason when gov databases are checked', async () => {
+    vi.mocked(checkDomainAgainstGovLists).mockResolvedValueOnce({
+      found: false, source: null, entityName: null, category: null, error: null,
+    });
+    vi.mocked(fetch).mockResolvedValueOnce(make200());
+
+    const report = await scanUrl('https://checked-site.example');
+
+    expect(report.confidenceReason).toContain('Government regulatory databases checked');
   });
 });

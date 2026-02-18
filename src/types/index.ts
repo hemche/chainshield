@@ -67,6 +67,10 @@ export interface UrlMetadata {
   protocol?: string;
   goPlusPhishing?: boolean;
   goPlusChecked?: boolean;
+  govChecked?: boolean;
+  govFlaggedAsic?: boolean;
+  govFlaggedAmf?: boolean;
+  govSource?: string;
 }
 
 export interface TxMetadata {

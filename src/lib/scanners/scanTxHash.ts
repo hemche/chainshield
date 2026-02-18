@@ -1,6 +1,6 @@
 import { SafetyReport, Finding, TxMetadata } from '@/types';
 import { calculateRisk } from '@/lib/riskScoring';
-import { TX_EXPLORERS } from '@/config/rules';
+import { TX_EXPLORERS, GOV_RESOURCE_LINKS } from '@/config/rules';
 
 const CHAIN_DETECT_ENDPOINTS = [
   { chain: 'Ethereum', url: (h: string) => `https://etherscan.io/tx/${h}` },
@@ -103,6 +103,12 @@ export async function scanTxHash(hash: string): Promise<SafetyReport> {
   recommendations.push('Paste any wallet address from this transaction into ChainShield to check it against security databases');
 
   const { score, level, breakdown } = calculateRisk(findings);
+
+  // Add government resource links for suspicious transactions
+  if (level !== 'SAFE') {
+    const topLinks = GOV_RESOURCE_LINKS.slice(0, 5).map(l => `${l.name} (${l.region}): ${l.url}`).join(' | ');
+    recommendations.push(`Check government scam databases: ${topLinks}`);
+  }
 
   // Confidence: LOW for tx hashes since we can only validate format + detect chain
   const confidence = metadata.detectedChain ? 'MEDIUM' : 'LOW';

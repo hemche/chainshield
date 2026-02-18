@@ -9,36 +9,49 @@ import PrivacyBanner from '@/components/PrivacyBanner';
 const HISTORY_KEY = 'chainshield_recent_scans';
 const MAX_HISTORY = 5;
 
-function getHistory(): string[] {
+// External store for scan history — returns data directly to avoid hydration mismatch
+const EMPTY_HISTORY: string[] = [];
+let cachedHistory: string[] = EMPTY_HISTORY;
+const historyListeners = new Set<() => void>();
+
+function readHistoryFromStorage(): string[] {
   try {
     const raw = sessionStorage.getItem(HISTORY_KEY);
-    return raw ? JSON.parse(raw) : [];
+    return raw ? JSON.parse(raw) : EMPTY_HISTORY;
   } catch {
-    return [];
+    return EMPTY_HISTORY;
   }
+}
+
+function subscribeHistory(cb: () => void) {
+  historyListeners.add(cb);
+  return () => { historyListeners.delete(cb); };
+}
+
+function getHistorySnapshot(): string[] {
+  const fresh = readHistoryFromStorage();
+  // Keep stable reference if content hasn't changed
+  if (JSON.stringify(fresh) !== JSON.stringify(cachedHistory)) {
+    cachedHistory = fresh;
+  }
+  return cachedHistory;
+}
+
+function getHistoryServerSnapshot(): string[] {
+  return EMPTY_HISTORY;
 }
 
 function saveHistory(input: string) {
   try {
-    const prev = getHistory().filter((h) => h !== input);
+    const prev = readHistoryFromStorage().filter((h) => h !== input);
     const next = [input, ...prev].slice(0, MAX_HISTORY);
     sessionStorage.setItem(HISTORY_KEY, JSON.stringify(next));
-    historyVersion++;
+    cachedHistory = next;
     historyListeners.forEach((l) => l());
   } catch {
     // sessionStorage unavailable
   }
 }
-
-// External store for scan history (avoids setState-in-useEffect lint error)
-let historyVersion = 0;
-const historyListeners = new Set<() => void>();
-function subscribeHistory(cb: () => void) {
-  historyListeners.add(cb);
-  return () => { historyListeners.delete(cb); };
-}
-function getHistorySnapshot() { return historyVersion; }
-function getHistoryServerSnapshot() { return 0; }
 
 function LoadingSkeleton() {
   return (
@@ -69,8 +82,7 @@ export default function Home() {
   const [report, setReport] = useState<SafetyReport | null>(null);
   const [loading, setLoading] = useState(false);
 
-  useSyncExternalStore(subscribeHistory, getHistorySnapshot, getHistoryServerSnapshot);
-  const history = getHistory();
+  const history = useSyncExternalStore(subscribeHistory, getHistorySnapshot, getHistoryServerSnapshot);
 
   const handleScanComplete = (r: SafetyReport) => {
     setReport(r);

@@ -4,16 +4,15 @@ import { useSyncExternalStore } from 'react';
 
 const BANNER_KEY = 'chainshield_banner_dismissed';
 
-let bannerVersion = 0;
+// External store — returns boolean directly to avoid hydration mismatch
 const bannerListeners = new Set<() => void>();
+
 function subscribeBanner(cb: () => void) {
   bannerListeners.add(cb);
   return () => { bannerListeners.delete(cb); };
 }
-function getBannerSnapshot() { return bannerVersion; }
-function getBannerServerSnapshot() { return 0; }
 
-function isDismissed(): boolean {
+function getBannerSnapshot(): boolean {
   try {
     return sessionStorage.getItem(BANNER_KEY) === '1';
   } catch {
@@ -21,9 +20,12 @@ function isDismissed(): boolean {
   }
 }
 
+function getBannerServerSnapshot(): boolean {
+  return false;
+}
+
 export default function PrivacyBanner() {
-  useSyncExternalStore(subscribeBanner, getBannerSnapshot, getBannerServerSnapshot);
-  const dismissed = isDismissed();
+  const dismissed = useSyncExternalStore(subscribeBanner, getBannerSnapshot, getBannerServerSnapshot);
 
   const handleDismiss = () => {
     try {
@@ -31,7 +33,6 @@ export default function PrivacyBanner() {
     } catch {
       // sessionStorage unavailable
     }
-    bannerVersion++;
     bannerListeners.forEach((l) => l());
   };
 

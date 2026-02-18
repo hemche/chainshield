@@ -172,3 +172,39 @@ export const CHAIN_ID_MAP: Record<string, number> = {
   avalanche: 43114,
   base: 8453,
 };
+
+// ---------------------------------------------------------------------------
+// Government Regulatory Scam Database Configuration
+// ---------------------------------------------------------------------------
+
+export const ASIC_CONFIG = {
+  /** ASIC MoneySmart Investor Alert List (Australia) */
+  baseUrl: 'https://static.moneysmart.gov.au/_data/investor-alert-list.json',
+  /** Fetch timeout (ms) */
+  fetchTimeoutMs: 10_000,
+  /** Cache TTL (ms) — 24 hours */
+  cacheTtlMs: 24 * 60 * 60 * 1000,
+} as const;
+
+export const AMF_CONFIG = {
+  /** AMF France blacklist CSV (data.gouv.fr) */
+  baseUrl: 'https://www.data.gouv.fr/api/1/datasets/r/d2d9df6d-1cd2-41a8-96f5-684cb3057ecb',
+  /** Fetch timeout (ms) */
+  fetchTimeoutMs: 15_000,
+  /** Cache TTL (ms) — 12 hours */
+  cacheTtlMs: 12 * 60 * 60 * 1000,
+} as const;
+
+/** Government regulatory resource links for manual verification */
+export const GOV_RESOURCE_LINKS = [
+  { region: 'USA (California)', name: 'DFPI Crypto Scam Tracker', url: 'https://dfpi.ca.gov/consumers/crypto/crypto-scam-tracker/' },
+  { region: 'USA', name: 'CFTC RED List', url: 'https://www.cftc.gov/LearnAndProtect/Resources/Check/redlist.htm' },
+  { region: 'USA', name: 'SEC Investor Alerts', url: 'https://www.sec.gov/investor/alerts' },
+  { region: 'UK', name: 'FCA Warning List', url: 'https://www.fca.org.uk/scamsmart/warning-list' },
+  { region: 'Australia', name: 'ASIC MoneySmart', url: 'https://moneysmart.gov.au/check-and-report-scams/investor-alert-list' },
+  { region: 'France', name: 'AMF Blacklist', url: 'https://www.amf-france.org/en/listings/black-list' },
+  { region: 'Singapore', name: 'MAS Investor Alert', url: 'https://www.mas.gov.sg/investor-alert-list' },
+  { region: 'Hong Kong', name: 'SFC Alert List', url: 'https://www.sfc.hk/en/alert-list' },
+  { region: 'Germany', name: 'BaFin Unauthorized Companies', url: 'https://www.bafin.de/EN/Verbraucher/Beschwerden/BeschwerdenUnternehmen/beschwerden_unternehmen_node_en.html' },
+  { region: 'Canada', name: 'CSA Investor Alerts', url: 'https://www.securities-administrators.ca/investor-tools/investor-warnings/' },
+] as const;

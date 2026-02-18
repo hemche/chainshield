@@ -7,8 +7,10 @@ import {
   TRUSTED_DOMAINS,
   SPOOFED_BRANDS,
   URL_THRESHOLDS,
+  GOV_RESOURCE_LINKS,
 } from '@/config/rules';
 import { fetchPhishingSite } from '@/lib/apis/goplus';
+import { checkDomainAgainstGovLists } from '@/lib/apis/govlists';
 
 const BROWSER_HEADERS = {
   'User-Agent':
@@ -309,6 +311,11 @@ export async function scanUrl(input: string): Promise<SafetyReport> {
   const goPlusPromise = isTrusted ? null : fetchPhishingSite(normalizedUrl);
 
   // ---------------------------------------------------------------------------
+  // Government regulatory database check — fire early, await after GoPlus
+  // ---------------------------------------------------------------------------
+  const govListPromise = isTrusted ? null : checkDomainAgainstGovLists(domain);
+
+  // ---------------------------------------------------------------------------
   // Reachability check — follow redirects manually to track hops and domains
   // ---------------------------------------------------------------------------
   const timeoutSeconds = URL_THRESHOLDS.fetchTimeoutMs / 1000;
@@ -546,6 +553,59 @@ export async function scanUrl(input: string): Promise<SafetyReport> {
     }
   }
 
+  // ---------------------------------------------------------------------------
+  // Government regulatory database result — await the earlier promise
+  // ---------------------------------------------------------------------------
+  if (govListPromise) {
+    const govResult = await govListPromise.catch(() => ({
+      found: false, source: null, entityName: null, category: null,
+      error: 'Government databases unavailable',
+    }));
+
+    if (govResult.found) {
+      metadata.govChecked = true;
+      if (govResult.source?.includes('ASIC')) metadata.govFlaggedAsic = true;
+      if (govResult.source?.includes('AMF')) metadata.govFlaggedAmf = true;
+      metadata.govSource = govResult.source || undefined;
+
+      const entityInfo = govResult.entityName
+        ? ` (entity: ${govResult.entityName})`
+        : '';
+      const categoryInfo = govResult.category
+        ? ` — category: ${govResult.category}`
+        : '';
+
+      findings.push({
+        message: `Listed in ${govResult.source} government scam database${entityInfo}${categoryInfo}`,
+        severity: 'high',
+      });
+      checks.push({
+        label: 'Government databases (ASIC/AMF)',
+        passed: false,
+        detail: `Flagged by ${govResult.source}`,
+      });
+    } else if (!govResult.error) {
+      metadata.govChecked = true;
+      findings.push({
+        message: 'Not found in ASIC or AMF government scam databases',
+        severity: 'info',
+        scoreOverride: 0,
+      });
+      checks.push({
+        label: 'Government databases (ASIC/AMF)',
+        passed: true,
+        detail: 'Not in government scam databases',
+      });
+    } else {
+      // API error — graceful degradation
+      checks.push({
+        label: 'Government databases (ASIC/AMF)',
+        passed: true,
+        detail: 'Database check unavailable',
+      });
+    }
+  }
+
   // Check for IP-based URLs (skip for trusted domains)
   if (!isTrusted) {
     const isIpUrl = /^https?:\/\/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/.test(normalizedUrl);
@@ -571,6 +631,12 @@ export async function scanUrl(input: string): Promise<SafetyReport> {
   const score = Math.max(5, rawScore);
   if (score > rawScore) {
     breakdown.push({ label: 'Baseline risk floor (no URL is truly zero-risk)', scoreImpact: score - rawScore });
+  }
+
+  // Add government resource links for risky URLs
+  if (level !== 'SAFE') {
+    const topLinks = GOV_RESOURCE_LINKS.slice(0, 5).map(l => `${l.name} (${l.region}): ${l.url}`).join(' | ');
+    recommendations.push(`Check government scam databases: ${topLinks}`);
   }
 
   // ---------------------------------------------------------------------------
@@ -606,6 +672,10 @@ export async function scanUrl(input: string): Promise<SafetyReport> {
       confidenceReason = `${checks.length} checks performed with ${findings.length} signals detected. URL was reachable.`;
     } else {
       confidenceReason = `${checks.length} checks performed.`;
+    }
+
+    if (metadata.govChecked) {
+      confidenceReason += ' Government regulatory databases checked.';
     }
   }
 
