@@ -1,4 +1,14 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
+
+export const metadata: Metadata = {
+  title: 'About — ChainShield',
+  description: 'Learn how ChainShield scans crypto URLs, tokens, transactions, and wallets for scam patterns. Free, open-source, and privacy-first.',
+  openGraph: {
+    title: 'About — ChainShield',
+    description: 'Learn how ChainShield scans crypto URLs, tokens, transactions, and wallets for scam patterns.',
+  },
+};
 
 export default function AboutPage() {
   return (

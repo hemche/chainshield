@@ -4,9 +4,16 @@ import { InputType } from '@/types';
 const BTC_BASE58_RE = /^[13][1-9A-HJ-NP-Za-km-z]{24,33}$/;
 // Bech32/Bech32m: starts with bc1, alphanumeric, 42-62 chars (case-insensitive per BIP-173)
 const BTC_BECH32_RE = /^bc1[a-z0-9]{38,59}$/i;
+// Solana: Base58, 32-44 chars, same charset as BTC but NOT starting with 1/3/bc1
+const SOLANA_RE = /^[2-9A-HJ-NP-Za-km-z][1-9A-HJ-NP-Za-km-z]{31,43}$/;
 
 export function isBitcoinAddress(input: string): boolean {
   return BTC_BASE58_RE.test(input) || BTC_BECH32_RE.test(input);
+}
+
+export function isSolanaAddress(input: string): boolean {
+  // Must match Base58 pattern, 32-44 chars, and NOT match BTC patterns
+  return SOLANA_RE.test(input) && !isBitcoinAddress(input);
 }
 
 export function detectInputType(input: string): InputType {
@@ -40,9 +47,14 @@ export function detectInputType(input: string): InputType {
     return 'wallet';
   }
 
-  // Bitcoin address detection (Legacy, P2SH, Bech32)
+  // Bitcoin address detection (Legacy, P2SH, Bech32) — must check before Solana
   if (isBitcoinAddress(trimmed)) {
     return 'btcWallet';
+  }
+
+  // Solana address detection (Base58, 32-44 chars, not BTC)
+  if (isSolanaAddress(trimmed)) {
+    return 'solanaToken';
   }
 
   // Broader BTC-like detection: correct prefix and charset but wrong length

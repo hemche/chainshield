@@ -7,6 +7,7 @@ const CHAIN_DETECT_ENDPOINTS = [
   { chain: 'BSC', url: (h: string) => `https://bscscan.com/tx/${h}` },
   { chain: 'Polygon', url: (h: string) => `https://polygonscan.com/tx/${h}` },
   { chain: 'Arbitrum', url: (h: string) => `https://arbiscan.io/tx/${h}` },
+  { chain: 'Base', url: (h: string) => `https://basescan.org/tx/${h}` },
 ];
 
 async function detectChain(hash: string): Promise<string | null> {
@@ -95,11 +96,11 @@ export async function scanTxHash(hash: string): Promise<SafetyReport> {
   // --- Safety recommendations (always shown) ---
 
   recommendations.push('Verify the transaction on a block explorer to see full details');
-  recommendations.push('Check if the transaction involves token approvals — revoke unlimited approvals');
-  recommendations.push('Verify the spender address is a known, legitimate contract');
-  recommendations.push('Look for "approve" or "setApprovalForAll" function calls — these grant spending permission');
-  recommendations.push('If you see an unfamiliar contract, do not interact further');
-  recommendations.push('Use revoke.cash to check and revoke token approvals');
+  recommendations.push('Check if the transaction involves token approvals — revoke unlimited approvals at revoke.cash');
+  recommendations.push('Look for "approve" or "setApprovalForAll" function calls — these grant spending permission to another address');
+  recommendations.push('Unlimited approvals (max uint256) are especially risky — prefer setting exact amounts');
+  recommendations.push('Verify the spender address is a known, legitimate contract (check labels on the block explorer)');
+  recommendations.push('If you see an unfamiliar contract as the spender, do not interact further');
   recommendations.push('Paste any wallet address from this transaction into ChainShield to check it against security databases');
 
   const { score, level, breakdown } = calculateRisk(findings);

@@ -1,5 +1,7 @@
 import type { NextConfig } from "next";
 
+const isDev = process.env.NODE_ENV === 'development';
+
 const nextConfig: NextConfig = {
   headers: async () => [
     {
@@ -13,11 +15,12 @@ const nextConfig: NextConfig = {
           key: "Content-Security-Policy",
           value: [
             "default-src 'self'",
-            "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+            // unsafe-eval only in dev (React uses eval for enhanced error stacks)
+            `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
             "style-src 'self' 'unsafe-inline'",
             "img-src 'self' data:",
             "font-src 'self'",
-            "connect-src 'self' https://api.dexscreener.com https://api.gopluslabs.io https://sourcify.dev",
+            "connect-src 'self' https://api.dexscreener.com https://api.gopluslabs.io https://sourcify.dev https://static.moneysmart.gov.au https://www.data.gouv.fr https://va.vercel-scripts.com",
             "frame-ancestors 'none'",
             "base-uri 'self'",
             "form-action 'self'",

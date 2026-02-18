@@ -29,10 +29,11 @@ export default function RiskScore({ score, level }: RiskScoreProps) {
   const offset = circumference - (score / 100) * circumference;
 
   return (
-    <div className={`relative inline-flex items-center justify-center ${glowClass[level]}`}>
+    <div className={`relative inline-flex items-center justify-center ${glowClass[level]}`} role="img" aria-label={`Risk score ${score} out of 100, level ${level}`}>
       <svg
         className="w-[140px] h-[140px] -rotate-90"
         viewBox="0 0 120 120"
+        aria-hidden="true"
         style={{
           '--ring-circumference': `${circumference}`,
           '--ring-offset': `${offset}`,

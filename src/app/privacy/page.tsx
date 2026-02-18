@@ -1,4 +1,14 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
+
+export const metadata: Metadata = {
+  title: 'Privacy Policy — ChainShield',
+  description: 'ChainShield privacy policy. Zero tracking, zero cookies, zero data stored. Your scans are processed and immediately discarded.',
+  openGraph: {
+    title: 'Privacy Policy — ChainShield',
+    description: 'Zero tracking, zero cookies, zero data stored. Your scans are processed and immediately discarded.',
+  },
+};
 
 export default function PrivacyPage() {
   return (

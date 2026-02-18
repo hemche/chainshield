@@ -5,10 +5,11 @@ import { scanToken } from './scanToken';
 import { scanTxHash } from './scanTxHash';
 import { scanWallet } from './scanWallet';
 import { scanBtcWallet } from './scanBtcWallet';
+import { scanSolanaToken } from './scanSolanaToken';
 import { scanInvalidAddress } from './scanInvalidAddress';
 import { isValidEvmAddress, isValidBitcoinAddress } from '@/lib/validation/addressValidation';
 
-export { detectInputType, scanUrl, scanToken, scanTxHash, scanWallet, scanBtcWallet, scanInvalidAddress };
+export { detectInputType, scanUrl, scanToken, scanTxHash, scanWallet, scanBtcWallet, scanSolanaToken, scanInvalidAddress };
 
 export async function scanInput(input: string): Promise<SafetyReport> {
   const trimmed = input.trim();
@@ -66,6 +67,8 @@ export async function scanInput(input: string): Promise<SafetyReport> {
       }
       return scanBtcWallet(trimmed);
     }
+    case 'solanaToken':
+      return scanSolanaToken(trimmed);
     default: {
       // Check if input looks like a BTC address attempt (right prefix, wrong chars/checksum)
       const looksLikeBtc = (/^[13]/.test(trimmed) || /^bc1/i.test(trimmed))

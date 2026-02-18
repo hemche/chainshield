@@ -12,6 +12,7 @@ function detectInputHint(value: string): string | null {
   if (/^0x[a-fA-F0-9]{40}$/.test(t)) return 'Token / wallet address detected';
   if (/^0x[a-fA-F0-9]+$/.test(t)) return t.length < 42 ? 'Typing hex address...' : 'Hex address detected';
   if (/^(bc1|[13])[a-zA-Z0-9]{24,}$/.test(t)) return 'Bitcoin address detected';
+  if (/^[2-9A-HJ-NP-Za-km-z][1-9A-HJ-NP-Za-km-z]{31,43}$/.test(t)) return 'Solana address detected';
   if (t.length > 5) return 'Unknown format';
   return null;
 }
@@ -85,7 +86,7 @@ export default function ScanForm({ onScanComplete, onScanStart }: ScanFormProps)
               className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-600 hover:text-gray-300 transition-colors"
               aria-label="Clear input"
             >
-              <svg className="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
@@ -98,7 +99,7 @@ export default function ScanForm({ onScanComplete, onScanStart }: ScanFormProps)
         >
           {loading ? (
             <>
-              <svg className="animate-spin w-4.5 h-4.5" fill="none" viewBox="0 0 24 24">
+              <svg className="animate-spin w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" aria-hidden="true">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
               </svg>
@@ -106,7 +107,7 @@ export default function ScanForm({ onScanComplete, onScanStart }: ScanFormProps)
             </>
           ) : (
             <>
-              <svg className="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
               Scan Now
@@ -120,12 +121,12 @@ export default function ScanForm({ onScanComplete, onScanStart }: ScanFormProps)
       )}
 
       {error && (
-        <p className="mt-3 text-red-400 text-sm text-center">{error}</p>
+        <p className="mt-3 text-red-400 text-sm text-center" role="alert">{error}</p>
       )}
 
       {/* Supported types hint */}
       <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
-        {['URLs', 'Token Contracts', 'Tx Hashes', 'Wallets', 'BTC Addresses'].map((type) => (
+        {['URLs', 'Token Contracts', 'Tx Hashes', 'Wallets', 'BTC Addresses', 'Solana Tokens'].map((type) => (
           <span key={type} className="text-[11px] text-gray-500 px-2.5 py-1 rounded-full border border-gray-800 bg-gray-900/50">
             {type}
           </span>

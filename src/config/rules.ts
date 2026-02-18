@@ -107,6 +107,7 @@ export const TX_EXPLORERS = [
   { name: 'BSC', prefix: 'https://bscscan.com/tx/' },
   { name: 'Polygon', prefix: 'https://polygonscan.com/tx/' },
   { name: 'Arbitrum', prefix: 'https://arbiscan.io/tx/' },
+  { name: 'Base', prefix: 'https://basescan.org/tx/' },
 ] as const;
 
 // ---------------------------------------------------------------------------

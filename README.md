@@ -8,10 +8,11 @@ Privacy-first crypto safety scanner. Paste a URL, token contract, transaction ha
 
 ChainShield analyzes crypto-related inputs for known scam patterns and risk signals using multiple security databases:
 
-- **URL Scanner** — Suspicious TLDs, scam keywords, unicode/homoglyph attacks, subdomain spoofing, IP-based URLs, HTTPS verification, redirect chain analysis, SSRF protection, and phishing database check (GoPlus)
+- **URL Scanner** — Suspicious TLDs, scam keywords, unicode/homoglyph attacks, subdomain spoofing, IP-based URLs, HTTPS verification, redirect chain analysis, SSRF protection, phishing database check (GoPlus), and government regulatory scam databases (ASIC Australia, AMF France)
 - **Token Scanner** — Liquidity analysis (DexScreener), 24h volume, price volatility, pair age, FDV-to-liquidity ratio, honeypot detection, buy/sell tax analysis, contract verification (Sourcify), proxy/selfdestruct detection (GoPlus)
-- **Transaction Scanner** — Hash format validation, auto chain detection across 4 networks, multi-chain explorer links, approval safety guidance
-- **Wallet Scanner** — EVM + BTC address checksum validation, malicious activity detection across ETH + BSC (GoPlus), multi-chain explorer links (6 networks)
+- **Solana Scanner** — DexScreener-based token analysis for Solana, liquidity/volume/age/price checks, Solscan + DexScreener links
+- **Transaction Scanner** — Hash format validation, auto chain detection across 5 networks (ETH, BSC, Polygon, Arbitrum, Base), multi-chain explorer links, approval safety guidance
+- **Wallet Scanner** — EVM + BTC address checksum validation, malicious activity detection across ETH + BSC (GoPlus), static scam blocklist (56 addresses), multi-chain explorer links (6 networks)
 
 ## Risk Scoring
 
@@ -34,6 +35,8 @@ All APIs are free, public, and require no authentication:
 | [DexScreener](https://dexscreener.com) | Token trading pairs, liquidity, volume | None |
 | [GoPlus Security](https://gopluslabs.io) | Phishing URLs, token honeypots, malicious wallets | 30 req/min |
 | [Sourcify](https://sourcify.dev) | Smart contract source code verification | None |
+| [ASIC MoneySmart](https://moneysmart.gov.au) | Australian government investor alert list | None |
+| [AMF France](https://www.amf-france.org) | French financial regulator blacklist | None |
 
 All API calls are non-blocking. If any API fails, the scanner returns a valid report with reduced confidence (graceful degradation).
 
@@ -58,7 +61,7 @@ Open [http://localhost:3000](http://localhost:3000).
 ## Testing
 
 ```bash
-npm test          # run all 301 tests
+npm test          # run all tests
 npm run test:watch # watch mode
 ```
 
@@ -68,17 +71,19 @@ npm run test:watch # watch mode
 src/
   app/
     api/scan/       — POST endpoint with rate limiting
+    api/og/         — Dynamic OG image generation (edge runtime)
     about/          — About page
     privacy/        — Privacy policy
     report/         — Shareable report page
     not-found.tsx   — Custom 404
     sitemap.ts      — Dynamic sitemap
-  components/       — React components (ScanForm, ReportCard, RiskScore, etc.)
+  components/       — React components (ScanForm, ReportCard, RiskScore, ErrorBoundary, etc.)
   config/rules.ts   — All thresholds, TLD lists, explorer configs
+  data/blocklist.ts — Static scam address blocklist (56 entries)
   lib/
-    apis/           — GoPlus + Sourcify API clients with caching
+    apis/           — GoPlus, Sourcify, and government scam database API clients with caching
     riskScoring/    — Score calculation + risk level determination
-    scanners/       — URL, Token, TxHash, Wallet, BTC scanners
+    scanners/       — URL, Token, Solana, TxHash, Wallet, BTC scanners + blocklist checker
     validation/     — EVM + BTC address checksum validation
   types/index.ts    — All TypeScript interfaces
 ```
@@ -106,14 +111,14 @@ src/
 
 Upcoming features and improvements:
 
-- **Multi-chain token scanning** — Expand GoPlus coverage to Solana, Avalanche, and Base
-- **NFT contract scanner** — Detect fake mints, honeypot NFTs, and malicious approval patterns
 - **ENS / domain resolution** — Resolve .eth names and scan the underlying address
 - **Browser extension** — One-click scan from any dApp or DEX page
+- **NFT contract scanner** — Detect fake mints, honeypot NFTs, and malicious approval patterns
 - **Bulk scan API** — Scan multiple addresses/URLs in a single request
+- **Telegram / Discord bot** — Scan links shared in group chats automatically
 - **Historical risk tracking** — Show how a token's risk score changes over time
 - **Community threat feed** — Crowdsourced scam reports integrated into scoring
-- **Telegram / Discord bot** — Scan links shared in group chats automatically
+- **Multi-language support** — Spanish and Chinese to cover high-risk populations
 
 ## Disclaimer
 

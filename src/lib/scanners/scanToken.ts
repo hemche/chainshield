@@ -3,6 +3,7 @@ import { calculateRisk } from '@/lib/riskScoring';
 import { TOKEN_THRESHOLDS, CHAIN_NAMES, CHAIN_ID_MAP, GOPLUS_CONFIG, GOV_RESOURCE_LINKS } from '@/config/rules';
 import { fetchTokenSecurity } from '@/lib/apis/goplus';
 import { fetchContractVerification } from '@/lib/apis/sourcify';
+import { checkBlocklist } from './checkBlocklist';
 
 interface DexScreenerPair {
   chainId: string;
@@ -50,6 +51,15 @@ export async function scanToken(address: string): Promise<SafetyReport> {
   let hasModerateVolatility = false;
   let hasHoneypot = false;
   let hasGoPlusData = false;
+
+  // Blocklist check
+  const blocklistMatch = checkBlocklist(address);
+  if (blocklistMatch) {
+    findings.push({
+      message: `This address is flagged as: ${blocklistMatch.label} (source: ${blocklistMatch.source})`,
+      severity: 'danger',
+    });
+  }
 
   // Basic address validation
   if (!/^0x[a-fA-F0-9]{40}$/.test(address)) {

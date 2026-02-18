@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { SafetyReport, TokenMetadata, UrlMetadata, TxMetadata, WalletMetadata, CheckItem } from '@/types';
+import { SafetyReport, TokenMetadata, UrlMetadata, TxMetadata, WalletMetadata, SolanaMetadata, CheckItem } from '@/types';
 import RiskScore from './RiskScore';
 import RiskBadge from './RiskBadge';
 
@@ -17,6 +17,7 @@ const inputTypeLabels: Record<string, string> = {
   txHash: 'Transaction Hash',
   wallet: 'Wallet Address',
   btcWallet: 'Bitcoin Address',
+  solanaToken: 'Solana Token',
   invalidAddress: 'Invalid Address',
   unknown: 'Unknown Input',
 };
@@ -39,27 +40,27 @@ const severityBgColors: Record<string, string> = {
 
 const severityIcons: Record<string, React.ReactNode> = {
   info: (
-    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
     </svg>
   ),
   low: (
-    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
     </svg>
   ),
   medium: (
-    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
     </svg>
   ),
   high: (
-    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
     </svg>
   ),
   danger: (
-    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
     </svg>
   ),
@@ -183,6 +184,55 @@ function TokenMetadataCard({ metadata }: { metadata: TokenMetadata }) {
       {metadata.dexscreenerUrl && (
         <ExternalLink href={metadata.dexscreenerUrl}>View on DexScreener</ExternalLink>
       )}
+    </div>
+  );
+}
+
+function SolanaMetadataCard({ metadata }: { metadata: SolanaMetadata }) {
+  return (
+    <div className="space-y-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+        {metadata.name && (
+          <MetadataCell label="Token" value={`${metadata.name} (${metadata.symbol})`} />
+        )}
+        {metadata.priceUsd && (
+          <MetadataCell label="Price" value={`$${metadata.priceUsd}`} />
+        )}
+        <MetadataCell label="Chain" value="Solana" />
+        {metadata.dex && (
+          <MetadataCell label="DEX" value={metadata.dex} />
+        )}
+        {metadata.liquidityUsd !== undefined && (
+          <MetadataCell label="Liquidity" value={`$${metadata.liquidityUsd.toLocaleString()}`} />
+        )}
+        {metadata.fdv !== undefined && (
+          <MetadataCell label="FDV" value={`$${metadata.fdv.toLocaleString()}`} />
+        )}
+        {metadata.volume24h !== undefined && (
+          <MetadataCell label="24h Volume" value={`$${metadata.volume24h.toLocaleString()}`} />
+        )}
+        {metadata.priceChange24h !== undefined && (
+          <MetadataCell
+            label="24h Change"
+            value={
+              <span className={metadata.priceChange24h >= 0 ? 'text-emerald-400' : 'text-red-400'}>
+                {metadata.priceChange24h >= 0 ? '+' : ''}{metadata.priceChange24h.toFixed(2)}%
+              </span>
+            }
+          />
+        )}
+        {metadata.pairAge && (
+          <MetadataCell label="Pair Age" value={metadata.pairAge} />
+        )}
+      </div>
+      <div className="flex flex-wrap gap-2">
+        {metadata.dexscreenerUrl && (
+          <ExternalLink href={metadata.dexscreenerUrl}>View on DexScreener</ExternalLink>
+        )}
+        {metadata.mintAddress && (
+          <ExternalLink href={`https://solscan.io/token/${metadata.mintAddress}`}>View on Solscan</ExternalLink>
+        )}
+      </div>
     </div>
   );
 }
@@ -329,11 +379,13 @@ function Section({ title, children, className }: { title?: string; children: Rea
 
 /* ── Collapsible ────────────────────────────────────────── */
 
-function Collapsible({ title, children, open, onToggle }: { title: string; children: React.ReactNode; open: boolean; onToggle: () => void }) {
+function Collapsible({ title, children, open, onToggle, id }: { title: string; children: React.ReactNode; open: boolean; onToggle: () => void; id: string }) {
   return (
     <div className="glass-card rounded-2xl overflow-hidden">
       <button
         onClick={onToggle}
+        aria-expanded={open}
+        aria-controls={`${id}-content`}
         className="w-full px-5 sm:px-6 py-4 flex items-center justify-between text-left hover:bg-gray-800/30 transition-colors"
       >
         <span className="text-[11px] font-semibold text-gray-500 uppercase tracking-widest">
@@ -344,12 +396,13 @@ function Collapsible({ title, children, open, onToggle }: { title: string; child
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
+          aria-hidden="true"
         >
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
         </svg>
       </button>
       {open && (
-        <div className="px-5 sm:px-6 pb-5 space-y-2">
+        <div id={`${id}-content`} role="region" aria-label={title} className="px-5 sm:px-6 pb-5 space-y-2">
           {children}
         </div>
       )}
@@ -361,6 +414,7 @@ function Collapsible({ title, children, open, onToggle }: { title: string; child
 
 export default function ReportCard({ report, onCopyReport, onNewScan }: ReportCardProps) {
   const [breakdownOpen, setBreakdownOpen] = useState(false);
+  const [showAllBreakdown, setShowAllBreakdown] = useState(false);
   const [checksOpen, setChecksOpen] = useState(false);
   const [explainerOpen, setExplainerOpen] = useState(false);
   const [copiedReport, setCopiedReport] = useState(false);
@@ -495,6 +549,7 @@ export default function ReportCard({ report, onCopyReport, onNewScan }: ReportCa
       {report.metadata && (
         <Section title="Details">
           {report.inputType === 'token' && <TokenMetadataCard metadata={report.metadata as TokenMetadata} />}
+          {report.inputType === 'solanaToken' && <SolanaMetadataCard metadata={report.metadata as SolanaMetadata} />}
           {report.inputType === 'url' && <UrlMetadataCard metadata={report.metadata as UrlMetadata} />}
           {(report.inputType === 'wallet' || report.inputType === 'btcWallet') && <WalletMetadataCard metadata={report.metadata as WalletMetadata} />}
           {report.inputType === 'txHash' && <TxMetadataCard metadata={report.metadata as TxMetadata} hash={report.inputValue} />}
@@ -532,6 +587,7 @@ export default function ReportCard({ report, onCopyReport, onNewScan }: ReportCa
           title={`Checks Performed (${report.checksPerformed.filter((c: CheckItem) => c.passed).length}/${report.checksPerformed.length} passed)`}
           open={checksOpen}
           onToggle={() => setChecksOpen(!checksOpen)}
+          id="checks-performed"
         >
           {report.checksPerformed.map((check: CheckItem, index: number) => (
             <div key={index} className="flex items-center gap-3 text-sm py-0.5">
@@ -561,17 +617,35 @@ export default function ReportCard({ report, onCopyReport, onNewScan }: ReportCa
           title="Why this score?"
           open={breakdownOpen}
           onToggle={() => setBreakdownOpen(!breakdownOpen)}
+          id="score-breakdown"
         >
-          {report.scoreBreakdown.map((item, index) => (
-            <div key={index} className="flex items-center justify-between text-sm py-0.5">
-              <span className="text-gray-400 truncate mr-4">{item.label}</span>
-              <span className={`font-mono font-semibold flex-shrink-0 ${
-                item.scoreImpact >= 60 ? 'text-red-500' : item.scoreImpact >= 25 ? 'text-red-400' : item.scoreImpact >= 15 ? 'text-yellow-400' : item.scoreImpact > 0 ? 'text-blue-400' : 'text-gray-600'
-              }`}>
-                +{item.scoreImpact}
-              </span>
-            </div>
-          ))}
+          {(() => {
+            const contributing = report.scoreBreakdown.filter(i => i.scoreImpact > 0);
+            const passed = report.scoreBreakdown.filter(i => i.scoreImpact === 0);
+            const items = showAllBreakdown ? report.scoreBreakdown : contributing.length > 0 ? contributing : report.scoreBreakdown;
+            return (
+              <>
+                {items.map((item, index) => (
+                  <div key={index} className="flex items-center justify-between text-sm py-0.5">
+                    <span className="text-gray-400 truncate mr-4">{item.label}</span>
+                    <span className={`font-mono font-semibold flex-shrink-0 ${
+                      item.scoreImpact >= 60 ? 'text-red-500' : item.scoreImpact >= 25 ? 'text-red-400' : item.scoreImpact >= 15 ? 'text-yellow-400' : item.scoreImpact > 0 ? 'text-blue-400' : 'text-gray-600'
+                    }`}>
+                      +{item.scoreImpact}
+                    </span>
+                  </div>
+                ))}
+                {!showAllBreakdown && passed.length > 0 && contributing.length > 0 && (
+                  <button
+                    onClick={() => setShowAllBreakdown(true)}
+                    className="text-xs text-gray-600 hover:text-gray-400 transition-colors mt-1"
+                  >
+                    + {passed.length} passed check{passed.length !== 1 ? 's' : ''} with no score impact
+                  </button>
+                )}
+              </>
+            );
+          })()}
           <div className="flex items-center justify-between text-sm pt-3 mt-1 border-t border-gray-700">
             <span className="text-white font-medium">Total Risk Score</span>
             <span className="font-mono font-bold text-white">{report.riskScore}/100</span>

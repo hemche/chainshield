@@ -2,6 +2,7 @@ import { SafetyReport, Finding, WalletMetadata } from '@/types';
 import { calculateRisk } from '@/lib/riskScoring';
 import { BTC_EXPLORERS } from '@/config/rules';
 import { isBitcoinAddress } from './detectInput';
+import { checkBlocklist } from './checkBlocklist';
 
 function getBtcAddressType(address: string): string {
   if (address.startsWith('bc1')) return 'Bech32 (SegWit)';
@@ -16,6 +17,16 @@ export async function scanBtcWallet(address: string): Promise<SafetyReport> {
   const metadata: WalletMetadata = {};
 
   const trimmed = address.trim();
+
+  // Blocklist check
+  const blocklistMatch = checkBlocklist(trimmed);
+  if (blocklistMatch) {
+    findings.push({
+      message: `This address is flagged as: ${blocklistMatch.label} (source: ${blocklistMatch.source})`,
+      severity: 'danger',
+    });
+    metadata.isFlagged = true;
+  }
 
   // Format validation
   const isValid = isBitcoinAddress(trimmed);

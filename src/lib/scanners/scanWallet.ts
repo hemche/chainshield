@@ -2,6 +2,7 @@ import { SafetyReport, Finding, WalletMetadata, ConfidenceLevel } from '@/types'
 import { calculateRisk } from '@/lib/riskScoring';
 import { WALLET_EXPLORERS, GOV_RESOURCE_LINKS } from '@/config/rules';
 import { fetchAddressSecurity } from '@/lib/apis/goplus';
+import { checkBlocklist } from './checkBlocklist';
 
 export async function scanWallet(address: string): Promise<SafetyReport> {
   const findings: Finding[] = [];
@@ -10,6 +11,16 @@ export async function scanWallet(address: string): Promise<SafetyReport> {
   let hasGoPlusData = false;
 
   const trimmed = address.trim();
+
+  // Blocklist check — instant DANGEROUS if matched
+  const blocklistMatch = checkBlocklist(trimmed);
+  if (blocklistMatch) {
+    findings.push({
+      message: `This address is flagged as: ${blocklistMatch.label} (source: ${blocklistMatch.source})`,
+      severity: 'danger',
+    });
+    metadata.isFlagged = true;
+  }
 
   // Basic validation
   if (!trimmed.startsWith('0x')) {

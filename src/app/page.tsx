@@ -55,7 +55,7 @@ function saveHistory(input: string) {
 
 function LoadingSkeleton() {
   return (
-    <div className="w-full max-w-3xl mx-auto space-y-4">
+    <div className="w-full max-w-3xl mx-auto space-y-4" role="status" aria-label="Scanning in progress">
       {/* Score ring */}
       <div className="glass-card rounded-2xl p-8 flex items-center gap-8">
         <div className="skeleton w-[140px] h-[140px] rounded-full flex-shrink-0" />
@@ -180,13 +180,15 @@ export default function Home() {
         {loading && <LoadingSkeleton />}
 
         {/* Report */}
-        {report && (
-          <ReportCard
-            report={report}
-            onCopyReport={handleCopyReport}
-            onNewScan={handleNewScan}
-          />
-        )}
+        <div aria-live="polite" aria-atomic="true">
+          {report && (
+            <ReportCard
+              report={report}
+              onCopyReport={handleCopyReport}
+              onNewScan={handleNewScan}
+            />
+          )}
+        </div>
       </main>
     </>
   );
