@@ -148,8 +148,10 @@ export async function scanUrl(input: string): Promise<SafetyReport> {
     recommendations.push('Avoid entering any personal information on non-HTTPS sites');
   }
 
-  // Check if domain is trusted — skip structural checks but still verify reachability
-  const isTrusted = (TRUSTED_DOMAINS as readonly string[]).includes(domain);
+  // Check if domain is trusted (exact match or subdomain of a trusted domain)
+  const isTrusted = (TRUSTED_DOMAINS as readonly string[]).some(
+    td => domain === td || domain.endsWith('.' + td)
+  );
   if (isTrusted) {
     checks.push({ label: 'Trusted domain', passed: true, detail: `${domain} is on the trusted allowlist` });
   }
@@ -465,26 +467,37 @@ export async function scanUrl(input: string): Promise<SafetyReport> {
     const errorMessage = error instanceof Error ? error.message : String(error);
     const errorName = error instanceof Error ? error.name : '';
 
+    // Trusted domains: unreachable is just bot protection / network flakiness (info)
+    // Untrusted domains: unreachable means we can't verify safety (high, forces SUSPICIOUS)
+    const unreachableSeverity = isTrusted ? 'info' as const : 'high' as const;
+    const unreachableOverride = isTrusted ? 0 : 31;
+
     if (errorName === 'AbortError' || errorMessage.includes('abort')) {
       metadata.errorType = 'timeout';
       findings.push({
-        message: `URL unreachable (timeout after ${timeoutSeconds}s) — cannot verify safety`,
-        severity: 'high',
-        scoreOverride: 26,
+        message: isTrusted
+          ? `URL unreachable (timeout after ${timeoutSeconds}s)`
+          : `URL unreachable (timeout after ${timeoutSeconds}s) — cannot verify safety`,
+        severity: unreachableSeverity,
+        scoreOverride: unreachableOverride,
       });
     } else if (error instanceof TypeError) {
       metadata.errorType = 'dns';
       findings.push({
-        message: 'URL unreachable (DNS resolution failed) — domain may not exist',
-        severity: 'high',
-        scoreOverride: 26,
+        message: isTrusted
+          ? 'URL unreachable (DNS resolution failed)'
+          : 'URL unreachable (DNS resolution failed) — domain may not exist',
+        severity: unreachableSeverity,
+        scoreOverride: unreachableOverride,
       });
     } else {
       metadata.errorType = 'unknown';
       findings.push({
-        message: 'URL unreachable (connection error) — cannot verify safety',
-        severity: 'high',
-        scoreOverride: 26,
+        message: isTrusted
+          ? 'URL unreachable (connection error)'
+          : 'URL unreachable (connection error) — cannot verify safety',
+        severity: unreachableSeverity,
+        scoreOverride: unreachableOverride,
       });
     }
     recommendations.push('Could not verify this URL — exercise extra caution');

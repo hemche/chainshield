@@ -133,7 +133,7 @@ describe('IP address URL detection', () => {
   it('flags http://192.168.0.1/claim as DANGEROUS', async () => {
     const report = await scanUrl('http://192.168.0.1/claim');
 
-    // http (25) + IP (25) + keyword "claim" (15) + unreachable (15) = 80
+    // http (25) + IP (25) + keyword "claim" (15) + unreachable (31) = 96
     expect(report.riskLevel).toBe('DANGEROUS');
     expect(allFindings(report)).toContain('IP address');
   });
@@ -141,7 +141,7 @@ describe('IP address URL detection', () => {
   it('flags http://104.21.44.99/login', async () => {
     const report = await scanUrl('http://104.21.44.99/login');
 
-    // http (25) + IP (25) + unreachable (15) = 65
+    // http (25) + IP (25) + unreachable (31) = 81
     expect(report.riskScore).toBeGreaterThan(40);
     expect(allFindings(report)).toContain('IP address');
     expect(allFindings(report)).toContain('HTTPS');
@@ -550,8 +550,9 @@ describe('URL reachability detection', () => {
     const findings = allFindings(report);
     expect(findings).toMatch(/URL unreachable \(timeout after 6s\)/);
 
-    // Timeout adds +15 (medium) risk points minimum
-    expect(report.riskScore).toBeGreaterThanOrEqual(15);
+    // Timeout adds +31 (high) risk points → SUSPICIOUS
+    expect(report.riskScore).toBeGreaterThanOrEqual(31);
+    expect(report.riskLevel).toBe('SUSPICIOUS');
 
     // Confidence cannot be HIGH when unreachable
     expect(report.confidence).not.toBe('HIGH');
@@ -569,9 +570,10 @@ describe('URL reachability detection', () => {
     expect(meta.errorType).toBe('dns');
 
     const findings = allFindings(report);
-    expect(findings).toContain('URL unreachable (DNS resolution failed)');
+    expect(findings).toContain('URL unreachable (DNS resolution failed) — domain may not exist');
 
-    expect(report.riskScore).toBeGreaterThanOrEqual(15);
+    expect(report.riskScore).toBeGreaterThanOrEqual(31);
+    expect(report.riskLevel).toBe('SUSPICIOUS');
     expect(report.confidence).not.toBe('HIGH');
   });
 
@@ -587,7 +589,7 @@ describe('URL reachability detection', () => {
     expect(meta.errorType).toBe('unknown');
 
     const findings = allFindings(report);
-    expect(findings).toContain('URL unreachable (connection error)');
+    expect(findings).toContain('URL unreachable (connection error) — cannot verify safety');
   });
 });
 
@@ -595,13 +597,13 @@ describe('URL reachability detection', () => {
 // 14) Confidence + Summary consistency with reachability
 // =========================================================================
 describe('Confidence and summary consistency', () => {
-  it('SAFE + unreachable → summary notes reachability issue', async () => {
+  it('unreachable → SUSPICIOUS with safety-unverified summary', async () => {
     // Default mock rejects → unreachable
     const report = await scanUrl('https://safe-looking.example');
 
-    // Only finding is the unreachable one (medium = 15), so SAFE
-    expect(report.riskLevel).toBe('SAFE');
-    expect(report.summary).toContain('could not be reached for verification');
+    // Only finding is the unreachable one (high/31) → SUSPICIOUS
+    expect(report.riskLevel).toBe('SUSPICIOUS');
+    expect(report.summary).toContain('could not be reached');
     expect(report.confidence).not.toBe('HIGH');
   });
 
