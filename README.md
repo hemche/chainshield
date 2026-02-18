@@ -2,6 +2,8 @@
 
 Privacy-first crypto safety scanner. Paste a URL, token contract, transaction hash, or wallet address and get an instant risk assessment — no tracking, no cookies, no data stored.
 
+**Live demo:** [chainshield-gray.vercel.app](https://chainshield-gray.vercel.app/)
+
 ## What It Does
 
 ChainShield analyzes crypto-related inputs for known scam patterns and risk signals using multiple security databases:
