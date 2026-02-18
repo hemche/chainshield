@@ -2,6 +2,8 @@
 
 Privacy-first crypto safety scanner. Paste a URL, token contract, transaction hash, or wallet address and get an instant risk assessment — no tracking, no cookies, no data stored.
 
+**Live demo:** [chainshield-gray.vercel.app](https://chainshield-gray.vercel.app/)
+
 ## What It Does
 
 ChainShield analyzes crypto-related inputs for known scam patterns and risk signals using multiple security databases:
@@ -92,9 +94,10 @@ src/
 
 ## Security
 
-- SSRF protection: blocks redirects to private/reserved IPs, localhost, and cloud metadata endpoints
+- SSRF protection: blocks redirects to private/reserved IPs, localhost, and cloud metadata endpoints (IPv4 + IPv6)
 - Redirect loop detection via visited URL tracking
 - Rate limiting: in-memory sliding window (30 requests per 60 seconds per IP)
+- Security headers: CSP, HSTS, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy
 - Input length capped at 2000 characters
 - No user input logged server-side
 - All clipboard operations have `.catch()` error handlers

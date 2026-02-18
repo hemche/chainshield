@@ -10,6 +10,9 @@
 !.yarn/releases
 !.yarn/versions
 
+.claude/skills/*
+.playwright
+.playwright-cli
 # testing
 /coverage
 
@@ -35,11 +38,6 @@ yarn-error.log*
 
 # vercel
 .vercel
-
-# claude code
-.claude/
-.playwright-cli/
-opentestai-*
 
 # typescript
 *.tsbuildinfo
