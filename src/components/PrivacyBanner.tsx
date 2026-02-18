@@ -1,28 +1,38 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useSyncExternalStore } from 'react';
 
 const BANNER_KEY = 'chainshield_banner_dismissed';
 
-export default function PrivacyBanner() {
-  const [dismissed, setDismissed] = useState(true); // start hidden to avoid flash
+let bannerVersion = 0;
+const bannerListeners = new Set<() => void>();
+function subscribeBanner(cb: () => void) {
+  bannerListeners.add(cb);
+  return () => { bannerListeners.delete(cb); };
+}
+function getBannerSnapshot() { return bannerVersion; }
+function getBannerServerSnapshot() { return 0; }
 
-  useEffect(() => {
-    try {
-      const wasDismissed = sessionStorage.getItem(BANNER_KEY) === '1';
-      setDismissed(wasDismissed);
-    } catch {
-      setDismissed(false);
-    }
-  }, []);
+function isDismissed(): boolean {
+  try {
+    return sessionStorage.getItem(BANNER_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
+export default function PrivacyBanner() {
+  useSyncExternalStore(subscribeBanner, getBannerSnapshot, getBannerServerSnapshot);
+  const dismissed = isDismissed();
 
   const handleDismiss = () => {
-    setDismissed(true);
     try {
       sessionStorage.setItem(BANNER_KEY, '1');
     } catch {
       // sessionStorage unavailable
     }
+    bannerVersion++;
+    bannerListeners.forEach((l) => l());
   };
 
   if (dismissed) return null;

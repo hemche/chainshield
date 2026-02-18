@@ -1,7 +1,7 @@
 import { SafetyReport, Finding, TokenMetadata, ConfidenceLevel } from '@/types';
 import { calculateRisk } from '@/lib/riskScoring';
 import { TOKEN_THRESHOLDS, CHAIN_NAMES, CHAIN_ID_MAP, GOPLUS_CONFIG } from '@/config/rules';
-import { fetchTokenSecurity, GoPlusTokenSecurity } from '@/lib/apis/goplus';
+import { fetchTokenSecurity } from '@/lib/apis/goplus';
 import { fetchContractVerification } from '@/lib/apis/sourcify';
 
 interface DexScreenerPair {

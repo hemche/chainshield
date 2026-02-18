@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useSyncExternalStore } from 'react';
 import { SafetyReport } from '@/types';
 import ScanForm from '@/components/ScanForm';
 import ReportCard from '@/components/ReportCard';
@@ -23,10 +23,22 @@ function saveHistory(input: string) {
     const prev = getHistory().filter((h) => h !== input);
     const next = [input, ...prev].slice(0, MAX_HISTORY);
     sessionStorage.setItem(HISTORY_KEY, JSON.stringify(next));
+    historyVersion++;
+    historyListeners.forEach((l) => l());
   } catch {
     // sessionStorage unavailable
   }
 }
+
+// External store for scan history (avoids setState-in-useEffect lint error)
+let historyVersion = 0;
+const historyListeners = new Set<() => void>();
+function subscribeHistory(cb: () => void) {
+  historyListeners.add(cb);
+  return () => { historyListeners.delete(cb); };
+}
+function getHistorySnapshot() { return historyVersion; }
+function getHistoryServerSnapshot() { return 0; }
 
 function LoadingSkeleton() {
   return (
@@ -56,17 +68,14 @@ function LoadingSkeleton() {
 export default function Home() {
   const [report, setReport] = useState<SafetyReport | null>(null);
   const [loading, setLoading] = useState(false);
-  const [history, setHistory] = useState<string[]>([]);
 
-  useEffect(() => {
-    setHistory(getHistory());
-  }, []);
+  useSyncExternalStore(subscribeHistory, getHistorySnapshot, getHistoryServerSnapshot);
+  const history = getHistory();
 
   const handleScanComplete = (r: SafetyReport) => {
     setReport(r);
     setLoading(false);
     saveHistory(r.inputValue);
-    setHistory(getHistory());
   };
 
   const handleScanStart = () => {

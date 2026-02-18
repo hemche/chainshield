@@ -159,7 +159,6 @@ export async function scanUrl(input: string): Promise<SafetyReport> {
   // -------------------------------------------------------------------------
   if (!isTrusted) {
     // Check for unicode / homoglyph characters in domain
-    // eslint-disable-next-line no-control-regex
     const hasNonAscii = /[^\x00-\x7F]/.test(domain);
     const hasPunycode = /xn--/.test(domain);
     checks.push({
@@ -469,20 +468,23 @@ export async function scanUrl(input: string): Promise<SafetyReport> {
     if (errorName === 'AbortError' || errorMessage.includes('abort')) {
       metadata.errorType = 'timeout';
       findings.push({
-        message: `URL unreachable (timeout after ${timeoutSeconds}s)`,
-        severity: 'medium',
+        message: `URL unreachable (timeout after ${timeoutSeconds}s) — cannot verify safety`,
+        severity: 'high',
+        scoreOverride: 26,
       });
     } else if (error instanceof TypeError) {
       metadata.errorType = 'dns';
       findings.push({
-        message: 'URL unreachable (DNS resolution failed)',
-        severity: 'medium',
+        message: 'URL unreachable (DNS resolution failed) — domain may not exist',
+        severity: 'high',
+        scoreOverride: 26,
       });
     } else {
       metadata.errorType = 'unknown';
       findings.push({
-        message: 'URL unreachable (connection error)',
-        severity: 'medium',
+        message: 'URL unreachable (connection error) — cannot verify safety',
+        severity: 'high',
+        scoreOverride: 26,
       });
     }
     recommendations.push('Could not verify this URL — exercise extra caution');
@@ -600,8 +602,8 @@ export async function scanUrl(input: string): Promise<SafetyReport> {
   let summary: string;
   if (isTrusted) {
     summary = `This is a known trusted domain (${domain}).`;
-  } else if (level === 'SAFE' && metadata.urlReachable === false) {
-    summary = `${domain} appears structurally safe, but could not be reached for verification.`;
+  } else if (metadata.urlReachable === false) {
+    summary = `${domain} could not be reached — safety cannot be verified. Exercise caution.`;
   } else if (level === 'SAFE' && metadata.errorType === 'blocked') {
     summary = `Site appears structurally safe but blocks automated verification (${metadata.statusCode}). Manual verification recommended.`;
   } else if (level === 'SAFE') {
