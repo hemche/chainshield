@@ -36,6 +36,11 @@ yarn-error.log*
 # vercel
 .vercel
 
+# claude code
+.claude/
+.playwright-cli/
+opentestai-*
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
