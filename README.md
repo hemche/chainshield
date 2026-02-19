@@ -11,6 +11,7 @@ ChainShield analyzes crypto-related inputs for known scam patterns and risk sign
 - **URL Scanner** — Suspicious TLDs, scam keywords, unicode/homoglyph attacks, subdomain spoofing, IP-based URLs, HTTPS verification, redirect chain analysis, SSRF protection, phishing database check (GoPlus), and government regulatory scam databases (ASIC Australia, AMF France)
 - **Token Scanner** — Liquidity analysis (DexScreener), 24h volume, price volatility, pair age, FDV-to-liquidity ratio, honeypot detection, buy/sell tax analysis, contract verification (Sourcify), proxy/selfdestruct detection (GoPlus)
 - **Solana Scanner** — DexScreener-based token analysis for Solana, liquidity/volume/age/price checks, Solscan + DexScreener links
+- **NFT Contract Scanner** — Automatic NFT detection for contracts without trading pairs. Malicious contract flagging, selfdestruct detection, unauthorized transfer detection, oversupply minting, privileged minting/burn, proxy detection, approval restrictions, trust list verification (GoPlus), contract verification (Sourcify). Supports ERC-721 and ERC-1155 on Ethereum, BSC, and Polygon.
 - **Transaction Scanner** — Hash format validation, auto chain detection across 5 networks (ETH, BSC, Polygon, Arbitrum, Base), multi-chain explorer links, approval safety guidance
 - **ENS Scanner** — Resolve `.eth` names (including subdomains) to Ethereum addresses via public RPC, then scan the underlying wallet
 - **Wallet Scanner** — EVM + BTC address checksum validation, malicious activity detection across ETH + BSC (GoPlus), static scam blocklist (56 addresses), multi-chain explorer links (6 networks)
@@ -113,7 +114,6 @@ src/
 Upcoming features and improvements:
 
 - **Browser extension** — One-click scan from any dApp or DEX page
-- **NFT contract scanner** — Detect fake mints, honeypot NFTs, and malicious approval patterns
 - **Bulk scan API** — Scan multiple addresses/URLs in a single request
 - **Telegram / Discord bot** — Scan links shared in group chats automatically
 - **Historical risk tracking** — Show how a token's risk score changes over time

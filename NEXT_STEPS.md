@@ -58,8 +58,8 @@ All Phase 1 items have been implemented.
 
 ## Testing Coverage
 
-- **479 tests** across 16 test files
-- Scanner tests: URL (99), Token (83), detectInput (50), addressValidation (43), BTC (30), ReportCard (25), Solana (23), ScanForm (17), TxHash (17), govlists (19), Wallet (15), scanInput (19), GoPlus (14), API route (9), Sourcify (7), Blocklist (9)
+- **549 tests** across 19 test files
+- Scanner tests: URL (99), Token (83), detectInput (65), addressValidation (43), ReportCard (31), BTC (30), Solana (23), NFT (22), scanInput (23), GoPlus (20), govlists (19), ScanForm (18), TxHash (17), Wallet (15), API route (9), ENS (8), Sourcify (7), Blocklist (9)
 - Build: clean, all pages generating correctly
 - CI/CD: GitHub Actions with lint + test + build
 
@@ -73,7 +73,7 @@ All Phase 1 items have been implemented.
 | Browser extension | Not started | Right-click "Check with ChainShield", intercept wallet prompts |
 | Telegram / Discord bot | Not started | Scan links shared in group chats |
 | Bulk scan API | Not started | Scan multiple addresses/URLs in single request |
-| NFT contract scanner | Not started | Detect fake mints, honeypot NFTs |
+| NFT contract scanner | Complete | GoPlus NFT security API, malicious/selfdestruct/approval/proxy/minting detection, ERC-721/1155, Sourcify, 22 tests |
 | Historical risk tracking | Not started | Show risk score changes over time |
 | Community threat feed | Not started | Crowdsourced scam reports |
 | Multi-language (i18n) | Not started | Spanish + Chinese covers huge victim populations |

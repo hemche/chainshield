@@ -5,6 +5,13 @@ All notable changes to ChainShield will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-02-19
+
+### Added
+
+- **NFT contract scanner** — Automatic NFT detection via GoPlus Security API when a contract address has no DexScreener trading pairs. Detects malicious contracts, selfdestruct, unauthorized transfers, oversupply minting, privileged minting/burn, proxy contracts, restricted approvals, and trust list status. Supports ERC-721 and ERC-1155 on Ethereum, BSC, and Polygon. NFT metadata card shows collection name, standard, chain, open source status, trust list, description, and external links (Etherscan, website, Discord, Twitter). Integrates Sourcify contract verification and blocklist check.
+- **549 total tests** across 19 test files.
+
 ## [1.1.0] - 2026-02-19
 
 ### Added

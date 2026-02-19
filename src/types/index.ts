@@ -1,4 +1,4 @@
-export type InputType = 'url' | 'token' | 'txHash' | 'wallet' | 'btcWallet' | 'solanaToken' | 'ens' | 'invalidAddress' | 'unknown';
+export type InputType = 'url' | 'token' | 'nft' | 'txHash' | 'wallet' | 'btcWallet' | 'solanaToken' | 'ens' | 'invalidAddress' | 'unknown';
 
 export type RiskLevel = 'SAFE' | 'SUSPICIOUS' | 'DANGEROUS';
 
@@ -116,7 +116,32 @@ export interface EnsMetadata {
   isFlagged?: boolean;
 }
 
-export type ReportMetadata = TokenMetadata | UrlMetadata | TxMetadata | WalletMetadata | SolanaMetadata | EnsMetadata;
+export interface NftMetadata {
+  name?: string;
+  symbol?: string;
+  description?: string;
+  chain?: string;
+  chainId?: string;
+  tokenStandard?: string;
+  isOpenSource?: boolean;
+  isProxy?: boolean;
+  canSelfDestruct?: boolean;
+  privilegedMinting?: boolean;
+  privilegedBurn?: boolean;
+  transferWithoutApproval?: boolean;
+  oversupplyMinting?: boolean;
+  restrictedApproval?: boolean;
+  maliciousContract?: boolean;
+  onTrustList?: boolean;
+  goPlusChecked?: boolean;
+  sourcifyVerified?: boolean;
+  websiteUrl?: string;
+  discordUrl?: string;
+  twitterUrl?: string;
+  explorerUrl?: string;
+}
+
+export type ReportMetadata = TokenMetadata | UrlMetadata | TxMetadata | WalletMetadata | SolanaMetadata | EnsMetadata | NftMetadata;
 
 export interface SafetyReport {
   inputType: InputType;

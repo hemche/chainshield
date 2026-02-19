@@ -127,7 +127,7 @@ export default function ScanForm({ onScanComplete, onScanStart }: ScanFormProps)
 
       {/* Supported types hint */}
       <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
-        {['URLs', 'Token Contracts', 'Tx Hashes', 'Wallets', 'BTC Addresses', 'Solana Tokens', 'ENS Names'].map((type) => (
+        {['URLs', 'Token Contracts', 'NFT Contracts', 'Tx Hashes', 'Wallets', 'BTC Addresses', 'Solana Tokens', 'ENS Names'].map((type) => (
           <span key={type} className="text-[11px] text-gray-500 px-2.5 py-1 rounded-full border border-gray-800 bg-gray-900/50">
             {type}
           </span>

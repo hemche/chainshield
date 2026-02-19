@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { SafetyReport, TokenMetadata, UrlMetadata, TxMetadata, WalletMetadata, SolanaMetadata, EnsMetadata, CheckItem } from '@/types';
+import { SafetyReport, TokenMetadata, UrlMetadata, TxMetadata, WalletMetadata, SolanaMetadata, EnsMetadata, NftMetadata, CheckItem } from '@/types';
 import RiskScore from './RiskScore';
 import RiskBadge from './RiskBadge';
 
@@ -19,6 +19,7 @@ const inputTypeLabels: Record<string, string> = {
   btcWallet: 'Bitcoin Address',
   solanaToken: 'Solana Token',
   ens: 'ENS Name',
+  nft: 'NFT Contract',
   invalidAddress: 'Invalid Address',
   unknown: 'Unknown Input',
 };
@@ -77,7 +78,7 @@ function shortenValue(value: string, type: string): string {
   if (type === 'txHash' && value.length > 20) {
     return `${value.slice(0, 10)}...${value.slice(-8)}`;
   }
-  if ((type === 'wallet' || type === 'token' || type === 'btcWallet' || type === 'invalidAddress') && value.length > 20) {
+  if ((type === 'wallet' || type === 'token' || type === 'nft' || type === 'btcWallet' || type === 'invalidAddress') && value.length > 20) {
     return `${value.slice(0, 8)}...${value.slice(-6)}`;
   }
   return value;
@@ -408,6 +409,56 @@ function EnsMetadataCard({ metadata }: { metadata: EnsMetadata }) {
   );
 }
 
+function NftMetadataCard({ metadata }: { metadata: NftMetadata }) {
+  return (
+    <div className="space-y-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+        {metadata.name && (
+          <MetadataCell label="Collection" value={`${metadata.name}${metadata.symbol ? ` (${metadata.symbol})` : ''}`} />
+        )}
+        {metadata.tokenStandard && (
+          <MetadataCell label="Standard" value={metadata.tokenStandard} />
+        )}
+        {metadata.chain && (
+          <MetadataCell label="Chain" value={metadata.chain} />
+        )}
+        {metadata.isOpenSource !== undefined && (
+          <MetadataCell
+            label="Open Source"
+            value={<span className={metadata.isOpenSource ? 'text-emerald-400' : 'text-red-400'}>{metadata.isOpenSource ? 'Yes' : 'No'}</span>}
+          />
+        )}
+        {metadata.onTrustList !== undefined && (
+          <MetadataCell
+            label="Trust List"
+            value={<span className={metadata.onTrustList ? 'text-emerald-400' : 'text-gray-500'}>{metadata.onTrustList ? 'Yes' : 'No'}</span>}
+          />
+        )}
+      </div>
+      {metadata.description && (
+        <div className="bg-gray-800/50 border border-gray-700/50 rounded-xl p-3.5">
+          <p className="text-[11px] text-gray-500 uppercase tracking-wider mb-1.5">Description</p>
+          <p className="text-sm text-gray-300 leading-relaxed">{metadata.description}</p>
+        </div>
+      )}
+      <div className="flex flex-wrap gap-2">
+        {metadata.explorerUrl && (
+          <ExternalLink href={metadata.explorerUrl}>View on Etherscan</ExternalLink>
+        )}
+        {metadata.websiteUrl && (
+          <ExternalLink href={metadata.websiteUrl}>Website</ExternalLink>
+        )}
+        {metadata.discordUrl && (
+          <ExternalLink href={metadata.discordUrl}>Discord</ExternalLink>
+        )}
+        {metadata.twitterUrl && (
+          <ExternalLink href={metadata.twitterUrl}>Twitter</ExternalLink>
+        )}
+      </div>
+    </div>
+  );
+}
+
 /* ── Section wrapper ────────────────────────────────────── */
 
 function Section({ title, children, className }: { title?: string; children: React.ReactNode; className?: string }) {
@@ -468,7 +519,7 @@ export default function ReportCard({ report, onCopyReport, onNewScan }: ReportCa
     ? `${window.location.origin}/report?input=${encodeURIComponent(report.inputValue)}`
     : '';
 
-  const needsShortening = ['txHash', 'wallet', 'token', 'btcWallet', 'invalidAddress'].includes(report.inputType);
+  const needsShortening = ['txHash', 'wallet', 'token', 'nft', 'btcWallet', 'invalidAddress'].includes(report.inputType);
 
   return (
     <div className="w-full max-w-3xl mx-auto space-y-4 stagger-children">
@@ -598,6 +649,7 @@ export default function ReportCard({ report, onCopyReport, onNewScan }: ReportCa
           {(report.inputType === 'wallet' || report.inputType === 'btcWallet') && <WalletMetadataCard metadata={report.metadata as WalletMetadata} />}
           {report.inputType === 'txHash' && <TxMetadataCard metadata={report.metadata as TxMetadata} hash={report.inputValue} />}
           {report.inputType === 'ens' && <EnsMetadataCard metadata={report.metadata as EnsMetadata} />}
+          {report.inputType === 'nft' && <NftMetadataCard metadata={report.metadata as NftMetadata} />}
         </Section>
       )}
 

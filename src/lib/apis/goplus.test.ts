@@ -3,6 +3,7 @@ import {
   fetchTokenSecurity,
   fetchPhishingSite,
   fetchAddressSecurity,
+  fetchNftSecurity,
   clearGoPlusCache,
 } from './goplus';
 
@@ -174,5 +175,91 @@ describe('fetchAddressSecurity', () => {
     const { data, error } = await fetchAddressSecurity(ADDRESS, 1);
     expect(data).toBeNull();
     expect(error).toBeTruthy();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// fetchNftSecurity
+// ---------------------------------------------------------------------------
+
+describe('fetchNftSecurity', () => {
+  const ADDRESS = '0xbc4ca0eda7647a8ab7c2061c2e118a18a936f13d';
+
+  it('returns NFT data when found on Ethereum', async () => {
+    mockGoPlusResponse({
+      [ADDRESS]: {
+        nft_name: 'BoredApeYachtClub',
+        nft_symbol: 'BAYC',
+        nft_erc: 'erc721',
+        malicious_nft_contract: '0',
+        trust_list: '1',
+      },
+    });
+
+    const { data, chainId, error } = await fetchNftSecurity(ADDRESS);
+    expect(error).toBeNull();
+    expect(chainId).toBe(1);
+    expect(data).toBeDefined();
+    expect(data!.nft_name).toBe('BoredApeYachtClub');
+    expect(data!.trust_list).toBe('1');
+  });
+
+  it('falls through to BSC when Ethereum has no data', async () => {
+    // Ethereum: empty result
+    mockGoPlusResponse({});
+    // BSC: has data
+    mockGoPlusResponse({
+      [ADDRESS]: { nft_name: 'BSC NFT', nft_erc: 'erc721' },
+    });
+
+    const { data, chainId, error } = await fetchNftSecurity(ADDRESS);
+    expect(error).toBeNull();
+    expect(chainId).toBe(56);
+    expect(data!.nft_name).toBe('BSC NFT');
+  });
+
+  it('returns null when no chain has data', async () => {
+    // Mock empty results for all 3 chains
+    mockGoPlusResponse({});
+    mockGoPlusResponse({});
+    mockGoPlusResponse({});
+
+    const { data, chainId, error } = await fetchNftSecurity(ADDRESS);
+    expect(data).toBeNull();
+    expect(chainId).toBeNull();
+    expect(error).toContain('not found');
+  });
+
+  it('handles API timeout on first chain and falls through', async () => {
+    const abortError = new DOMException('The operation was aborted', 'AbortError');
+    vi.mocked(fetch).mockRejectedValueOnce(abortError);
+    // BSC: has data
+    mockGoPlusResponse({
+      [ADDRESS]: { nft_name: 'Fallback NFT' },
+    });
+
+    const { data, chainId } = await fetchNftSecurity(ADDRESS);
+    expect(chainId).toBe(56);
+    expect(data!.nft_name).toBe('Fallback NFT');
+  });
+
+  it('returns error when all chains fail', async () => {
+    // All 3 chain requests fail (default mock rejects)
+    const { data, chainId, error } = await fetchNftSecurity(ADDRESS);
+    expect(data).toBeNull();
+    expect(chainId).toBeNull();
+    expect(error).toBeTruthy();
+  });
+
+  it('uses cache on repeated calls', async () => {
+    mockGoPlusResponse({
+      [ADDRESS]: { nft_name: 'CachedNFT' },
+    });
+
+    const first = await fetchNftSecurity(ADDRESS);
+    const second = await fetchNftSecurity(ADDRESS);
+
+    expect(first.data).toEqual(second.data);
+    expect(fetch).toHaveBeenCalledTimes(1);
   });
 });

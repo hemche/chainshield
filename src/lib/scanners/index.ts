@@ -8,9 +8,11 @@ import { scanBtcWallet } from './scanBtcWallet';
 import { scanSolanaToken } from './scanSolanaToken';
 import { scanInvalidAddress } from './scanInvalidAddress';
 import { scanEns } from './scanEns';
+import { scanNft } from './scanNft';
+import { fetchNftSecurity } from '@/lib/apis/goplus';
 import { isValidEvmAddress, isValidBitcoinAddress } from '@/lib/validation/addressValidation';
 
-export { detectInputType, scanUrl, scanToken, scanTxHash, scanWallet, scanBtcWallet, scanSolanaToken, scanInvalidAddress, scanEns };
+export { detectInputType, scanUrl, scanToken, scanTxHash, scanWallet, scanBtcWallet, scanSolanaToken, scanInvalidAddress, scanEns, scanNft };
 
 export async function scanInput(input: string): Promise<SafetyReport> {
   const trimmed = input.trim();
@@ -48,6 +50,15 @@ export async function scanInput(input: string): Promise<SafetyReport> {
         f => f.severity === 'danger' && f.message.includes('no liquidity pairs')
       );
       if (hasNoPairs) {
+        // Try NFT detection before falling back to wallet
+        try {
+          const nftResult = await fetchNftSecurity(trimmed);
+          if (nftResult.data) {
+            return scanNft(trimmed);
+          }
+        } catch {
+          // GoPlus NFT endpoint failed — fall through to wallet
+        }
         return scanWallet(trimmed);
       }
       return tokenReport;

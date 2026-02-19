@@ -22,6 +22,29 @@ export interface GoPlusTokenSecurity {
   creator_address?: string;
 }
 
+export interface GoPlusNftSecurity {
+  nft_name?: string;
+  nft_symbol?: string;
+  nft_description?: string;
+  nft_erc?: string;
+  nft_open_source?: string;
+  nft_proxy?: string;
+  privileged_minting?: string;
+  privileged_burn?: string;
+  self_destruct?: string;
+  transfer_without_approval?: string;
+  oversupply_minting?: string;
+  restricted_approval?: string;
+  trust_list?: string;
+  malicious_nft_contract?: string;
+  website_url?: string;
+  discord_url?: string;
+  github_url?: string;
+  twitter_url?: string;
+  medium_url?: string;
+  telegram_url?: string;
+}
+
 export interface GoPlusAddressSecurity {
   phishing_activities?: string;
   honeypot_related_address?: string;
@@ -157,4 +180,36 @@ export async function fetchAddressSecurity(
 ): Promise<{ data: GoPlusAddressSecurity | null; error: string | null }> {
   const endpoint = `/address_security/${address}?chain_id=${chainId}`;
   return fetchGoPlus<GoPlusAddressSecurity>(endpoint);
+}
+
+/**
+ * Fetch NFT contract security data from GoPlus.
+ * Tries multiple chains sequentially (Ethereum first, then BSC, Polygon).
+ * Returns on the first chain that has data.
+ */
+export async function fetchNftSecurity(
+  address: string,
+  chainIds: number[] = [1, 56, 137],
+): Promise<{ data: GoPlusNftSecurity | null; chainId: number | null; error: string | null }> {
+  const lowerAddress = address.toLowerCase();
+
+  for (let i = 0; i < chainIds.length; i++) {
+    const chainId = chainIds[i];
+    const endpoint = `/nft_security/${chainId}?contract_addresses=${lowerAddress}`;
+    const result = await fetchGoPlus<Record<string, GoPlusNftSecurity>>(endpoint);
+
+    if (!result.data) {
+      if (i === chainIds.length - 1) {
+        return { data: null, chainId: null, error: result.error ?? 'NFT contract not found in GoPlus database' };
+      }
+      continue;
+    }
+
+    const nftData = result.data[lowerAddress];
+    if (nftData && Object.keys(nftData).length > 0) {
+      return { data: nftData, chainId, error: null };
+    }
+  }
+
+  return { data: null, chainId: null, error: 'NFT contract not found in GoPlus database' };
 }

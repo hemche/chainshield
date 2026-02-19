@@ -295,6 +295,48 @@ describe('ReportCard', () => {
     });
   });
 
+  describe('NFT metadata card', () => {
+    it('renders NFT Contract label for nft input type', () => {
+      renderReport({ inputType: 'nft' });
+      expect(screen.getByText('NFT Contract')).toBeDefined();
+    });
+
+    it('renders NFT metadata with collection name and standard', () => {
+      renderReport({
+        inputType: 'nft',
+        metadata: {
+          name: 'BoredApeYachtClub',
+          symbol: 'BAYC',
+          tokenStandard: 'ERC-721',
+          chain: 'Ethereum',
+          isOpenSource: true,
+          onTrustList: true,
+          description: 'A collection of 10,000 unique Bored Ape NFTs',
+          explorerUrl: 'https://etherscan.io/address/0xBC4CA0EdA7647A8aB7C2061c2E118A18a936f13D',
+        },
+      });
+      expect(screen.getByText('BoredApeYachtClub (BAYC)')).toBeDefined();
+      expect(screen.getByText('ERC-721')).toBeDefined();
+      expect(screen.getByText('Ethereum')).toBeDefined();
+      expect(screen.getByText('A collection of 10,000 unique Bored Ape NFTs')).toBeDefined();
+    });
+
+    it('renders NFT metadata for malicious contract', () => {
+      renderReport({
+        inputType: 'nft',
+        riskLevel: 'DANGEROUS',
+        riskScore: 80,
+        metadata: {
+          name: 'FakeNFT',
+          maliciousContract: true,
+          isOpenSource: false,
+          onTrustList: false,
+        },
+      });
+      expect(screen.getByText('DANGEROUS')).toBeDefined();
+    });
+  });
+
   describe('score explainer', () => {
     it('toggles score explainer on ? button click', () => {
       renderReport();

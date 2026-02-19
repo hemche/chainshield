@@ -60,6 +60,19 @@ vi.mock('./scanEns', () => ({
   }),
 }));
 
+vi.mock('./scanNft', () => ({
+  scanNft: vi.fn().mockResolvedValue({
+    inputType: 'nft', inputValue: '0x' + 'b'.repeat(40), riskScore: 5, riskLevel: 'SAFE',
+    confidence: 'HIGH', confidenceReason: 'mock', summary: 'mock', scoreBreakdown: [],
+    findings: [{ message: 'GoPlus NFT audit passed', severity: 'info' }],
+    recommendations: [], timestamp: '2026-01-01T00:00:00.000Z',
+  }),
+}));
+
+vi.mock('@/lib/apis/goplus', () => ({
+  fetchNftSecurity: vi.fn().mockResolvedValue({ data: null, chainId: null, error: 'not found' }),
+}));
+
 vi.mock('./scanInvalidAddress', () => ({
   scanInvalidAddress: vi.fn().mockResolvedValue({
     inputType: 'invalidAddress', inputValue: 'bad', riskScore: 70, riskLevel: 'DANGEROUS',
@@ -83,6 +96,8 @@ import { scanBtcWallet } from './scanBtcWallet';
 import { scanSolanaToken } from './scanSolanaToken';
 import { scanInvalidAddress } from './scanInvalidAddress';
 import { scanEns } from './scanEns';
+import { scanNft } from './scanNft';
+import { fetchNftSecurity } from '@/lib/apis/goplus';
 import { isValidEvmAddress, isValidBitcoinAddress } from '@/lib/validation/addressValidation';
 
 beforeEach(() => {
@@ -157,7 +172,7 @@ describe('scanInput', () => {
       expect(scanToken).not.toHaveBeenCalled();
     });
 
-    it('falls back to scanWallet when token scan finds no liquidity pairs', async () => {
+    it('falls back to scanWallet when token scan finds no liquidity pairs and no NFT data', async () => {
       vi.mocked(scanToken).mockResolvedValueOnce({
         inputType: 'token',
         inputValue: '0x' + 'a'.repeat(40),
@@ -173,10 +188,68 @@ describe('scanInput', () => {
         recommendations: [],
         timestamp: '2026-01-01T00:00:00.000Z',
       });
+      // fetchNftSecurity default mock returns null data
 
       const addr = '0x' + 'a'.repeat(40);
       const report = await scanInput(addr);
       expect(scanToken).toHaveBeenCalledWith(addr);
+      expect(fetchNftSecurity).toHaveBeenCalledWith(addr);
+      expect(scanNft).not.toHaveBeenCalled();
+      expect(scanWallet).toHaveBeenCalledWith(addr);
+      expect(report.inputType).toBe('wallet');
+    });
+
+    it('falls back to scanNft when token has no pairs but GoPlus returns NFT data', async () => {
+      vi.mocked(scanToken).mockResolvedValueOnce({
+        inputType: 'token',
+        inputValue: '0x' + 'a'.repeat(40),
+        riskScore: 65,
+        riskLevel: 'DANGEROUS',
+        confidence: 'LOW',
+        confidenceReason: 'mock',
+        summary: 'mock',
+        scoreBreakdown: [],
+        findings: [
+          { message: 'Token has no liquidity pairs on DexScreener', severity: 'danger' },
+        ],
+        recommendations: [],
+        timestamp: '2026-01-01T00:00:00.000Z',
+      });
+      vi.mocked(fetchNftSecurity).mockResolvedValueOnce({
+        data: { nft_name: 'TestNFT', nft_erc: 'erc721' },
+        chainId: 1,
+        error: null,
+      });
+
+      const addr = '0x' + 'a'.repeat(40);
+      const report = await scanInput(addr);
+      expect(scanToken).toHaveBeenCalledWith(addr);
+      expect(fetchNftSecurity).toHaveBeenCalledWith(addr);
+      expect(scanNft).toHaveBeenCalledWith(addr);
+      expect(scanWallet).not.toHaveBeenCalled();
+      expect(report.inputType).toBe('nft');
+    });
+
+    it('falls back to scanWallet when NFT probe throws', async () => {
+      vi.mocked(scanToken).mockResolvedValueOnce({
+        inputType: 'token',
+        inputValue: '0x' + 'a'.repeat(40),
+        riskScore: 65,
+        riskLevel: 'DANGEROUS',
+        confidence: 'LOW',
+        confidenceReason: 'mock',
+        summary: 'mock',
+        scoreBreakdown: [],
+        findings: [
+          { message: 'Token has no liquidity pairs on DexScreener', severity: 'danger' },
+        ],
+        recommendations: [],
+        timestamp: '2026-01-01T00:00:00.000Z',
+      });
+      vi.mocked(fetchNftSecurity).mockRejectedValueOnce(new Error('network error'));
+
+      const addr = '0x' + 'a'.repeat(40);
+      const report = await scanInput(addr);
       expect(scanWallet).toHaveBeenCalledWith(addr);
       expect(report.inputType).toBe('wallet');
     });
