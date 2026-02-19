@@ -1,6 +1,6 @@
 import { SafetyReport, Finding, SolanaMetadata, ConfidenceLevel } from '@/types';
 import { calculateRisk } from '@/lib/riskScoring';
-import { TOKEN_THRESHOLDS, GOV_RESOURCE_LINKS } from '@/config/rules';
+import { TOKEN_THRESHOLDS } from '@/config/rules';
 
 interface DexScreenerPair {
   chainId: string;
@@ -245,8 +245,7 @@ export async function scanSolanaToken(address: string): Promise<SafetyReport> {
 
   // Add government resource links for risky tokens
   if (level !== 'SAFE') {
-    const topLinks = GOV_RESOURCE_LINKS.slice(0, 5).map(l => `${l.name} (${l.region}): ${l.url}`).join(' | ');
-    recommendations.push(`Check government scam databases: ${topLinks}`);
+    recommendations.push('Cross-check with government scam databases (DFPI, CFTC, SEC, FCA, ASIC, AMF) for additional verification');
   }
 
   // Baseline floor: SAFE tokens get at least 5; volatile ones get 10

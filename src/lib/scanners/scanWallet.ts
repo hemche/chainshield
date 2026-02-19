@@ -1,6 +1,6 @@
 import { SafetyReport, Finding, WalletMetadata, ConfidenceLevel } from '@/types';
 import { calculateRisk } from '@/lib/riskScoring';
-import { WALLET_EXPLORERS, GOV_RESOURCE_LINKS } from '@/config/rules';
+import { WALLET_EXPLORERS } from '@/config/rules';
 import { fetchAddressSecurity } from '@/lib/apis/goplus';
 import { checkBlocklist } from './checkBlocklist';
 
@@ -156,8 +156,7 @@ export async function scanWallet(address: string): Promise<SafetyReport> {
 
   // Add government resource links for flagged wallets
   if (level !== 'SAFE') {
-    const topLinks = GOV_RESOURCE_LINKS.slice(0, 5).map(l => `${l.name} (${l.region}): ${l.url}`).join(' | ');
-    recommendations.push(`Check government scam databases: ${topLinks}`);
+    recommendations.push('Cross-check with government scam databases (DFPI, CFTC, SEC, FCA, ASIC, AMF) for additional verification');
   }
 
   // Confidence — upgraded to HIGH when GoPlus data is available

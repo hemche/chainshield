@@ -661,7 +661,7 @@ export default function ReportCard({ report, onCopyReport, onNewScan }: ReportCa
               <svg className="w-4 h-4 mt-0.5 text-blue-400/70 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              <span className="text-gray-300 text-sm leading-relaxed">{rec}</span>
+              <span className="text-gray-300 text-sm leading-relaxed break-words">{rec}</span>
             </li>
           ))}
         </ul>

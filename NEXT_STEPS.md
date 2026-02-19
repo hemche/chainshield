@@ -30,12 +30,12 @@ All Phase 1 items have been implemented.
 
 ---
 
-## Phase 4: UX Improvements — MOSTLY COMPLETE
+## Phase 4: UX Improvements ✅ COMPLETE
 
 - **4.1 Explain Baseline Score** ✅ — "Why this score?" always visible with baseline floor entry. Score explainer shows 0-30/31-60/61-100 ranges.
 - **4.2 Contextual Verdict Guidance** ✅ — Summary field provides contextual guidance per risk level. Next step recommendations tailored to input type and risk.
 - **4.3 Scan History** ✅ — sessionStorage-based recent scans (last 5) shown as clickable chips on homepage.
-- **4.4 Mobile-First Polish** — Partially done (responsive grid, native share sheet). Further CSS tweaks may be needed after visual QA.
+- **4.4 Mobile-First Polish** ✅ — Responsive grid, native share sheet, overflow-x-hidden on body, min-w-0 on flex containers, break-words on recommendations. Verified at 375px viewport.
 - **4.5 Hide +0 Score Items** ✅ — Score breakdown shows only contributing factors by default. "+N passed checks with no score impact" toggle reveals +0 items.
 
 ---
@@ -80,4 +80,4 @@ All Phase 1 items have been implemented.
 | PWA support | Not started | Installable progressive web app |
 | ML scoring | Not started | Train on labeled scam/legit data for dynamic weighting |
 | Nonce-based CSP | Deferred | Requires middleware.ts, forces all pages to dynamic rendering |
-| Mobile visual QA | Not started | Full Playwright screenshot testing at 375px |
+| Mobile visual QA | Complete | Full Playwright screenshot testing at 375px — overflow fixes applied |

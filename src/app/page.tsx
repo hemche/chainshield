@@ -125,7 +125,7 @@ export default function Home() {
   return (
     <>
       <PrivacyBanner />
-      <main className="flex-1 flex flex-col items-center px-4 sm:px-6 py-12 sm:py-20">
+      <main className="flex-1 flex flex-col items-center px-4 sm:px-6 py-12 sm:py-20 min-w-0 w-full">
         {/* Header */}
         {!report && !loading && (
           <div className="text-center mb-10 sm:mb-14">
@@ -180,7 +180,7 @@ export default function Home() {
         {loading && <LoadingSkeleton />}
 
         {/* Report */}
-        <div aria-live="polite" aria-atomic="true">
+        <div aria-live="polite" aria-atomic="true" className="w-full min-w-0">
           {report && (
             <ReportCard
               report={report}

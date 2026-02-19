@@ -7,7 +7,6 @@ import {
   TRUSTED_DOMAINS,
   SPOOFED_BRANDS,
   URL_THRESHOLDS,
-  GOV_RESOURCE_LINKS,
 } from '@/config/rules';
 import { fetchPhishingSite } from '@/lib/apis/goplus';
 import { checkDomainAgainstGovLists } from '@/lib/apis/govlists';
@@ -635,8 +634,7 @@ export async function scanUrl(input: string): Promise<SafetyReport> {
 
   // Add government resource links for risky URLs
   if (level !== 'SAFE') {
-    const topLinks = GOV_RESOURCE_LINKS.slice(0, 5).map(l => `${l.name} (${l.region}): ${l.url}`).join(' | ');
-    recommendations.push(`Check government scam databases: ${topLinks}`);
+    recommendations.push('Cross-check with government scam databases (DFPI, CFTC, SEC, FCA, ASIC, AMF) for additional verification');
   }
 
   // ---------------------------------------------------------------------------

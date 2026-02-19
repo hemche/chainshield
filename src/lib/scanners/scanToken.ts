@@ -1,6 +1,6 @@
 import { SafetyReport, Finding, TokenMetadata, ConfidenceLevel } from '@/types';
 import { calculateRisk } from '@/lib/riskScoring';
-import { TOKEN_THRESHOLDS, CHAIN_NAMES, CHAIN_ID_MAP, GOPLUS_CONFIG, GOV_RESOURCE_LINKS } from '@/config/rules';
+import { TOKEN_THRESHOLDS, CHAIN_NAMES, CHAIN_ID_MAP, GOPLUS_CONFIG } from '@/config/rules';
 import { fetchTokenSecurity } from '@/lib/apis/goplus';
 import { fetchContractVerification } from '@/lib/apis/sourcify';
 import { checkBlocklist } from './checkBlocklist';
@@ -472,8 +472,7 @@ export async function scanToken(address: string): Promise<SafetyReport> {
 
   // Add government resource links for risky tokens
   if (level !== 'SAFE') {
-    const topLinks = GOV_RESOURCE_LINKS.slice(0, 5).map(l => `${l.name} (${l.region}): ${l.url}`).join(' | ');
-    recommendations.push(`Check government scam databases: ${topLinks}`);
+    recommendations.push('Cross-check with government scam databases (DFPI, CFTC, SEC, FCA, ASIC, AMF) for additional verification');
   }
 
   // ---------------------------------------------------------------------------
