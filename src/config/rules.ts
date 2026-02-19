@@ -196,6 +196,19 @@ export const AMF_CONFIG = {
   cacheTtlMs: 12 * 60 * 60 * 1000,
 } as const;
 
+export const ENS_CONFIG = {
+  /** Primary RPC endpoint for ENS resolution (no auth key required) */
+  primaryRpc: 'https://cloudflare-eth.com',
+  /** Fallback RPC endpoint */
+  fallbackRpc: 'https://eth.llamarpc.com',
+  /** Fetch timeout for RPC calls (ms) */
+  fetchTimeoutMs: 8_000,
+  /** In-memory cache TTL (ms) — 1 hour */
+  cacheTtlMs: 60 * 60 * 1000,
+  /** Max cache entries to prevent memory leaks */
+  cacheMaxEntries: 200,
+} as const;
+
 /** Government regulatory resource links for manual verification */
 export const GOV_RESOURCE_LINKS = [
   { region: 'USA (California)', name: 'DFPI Crypto Scam Tracker', url: 'https://dfpi.ca.gov/consumers/crypto/crypto-scam-tracker/' },

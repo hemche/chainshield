@@ -5,6 +5,15 @@ All notable changes to ChainShield will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-02-19
+
+### Added
+
+- **ENS (.eth) name resolution** — Paste any ENS name (e.g., `vitalik.eth`) and get a wallet risk assessment. Resolves via public Ethereum RPC (Cloudflare + LlamaRPC fallback), 1h in-memory cache, negative caching for unresolvable names. ENS metadata card shows resolved address, resolution status, and explorer links.
+- **Mobile layout fixes** — Fixed content overflow on 375px viewports: `overflow-x-hidden` on body, `min-w-0` on flex containers, `break-words` on recommendations.
+- **Shorter gov resource recommendations** — Replaced long inline URLs with concise "Cross-check with government scam databases (DFPI, CFTC, SEC, FCA, ASIC, AMF)" text.
+- **516 total tests** across 18 test files.
+
 ## [1.0.0] - 2026-02-18
 
 ### Added

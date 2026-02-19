@@ -260,6 +260,41 @@ describe('ReportCard', () => {
     });
   });
 
+  describe('ENS metadata card', () => {
+    it('renders ENS Name label for ens input type', () => {
+      renderReport({ inputType: 'ens' });
+      expect(screen.getByText('ENS Name')).toBeDefined();
+    });
+
+    it('renders ENS metadata with resolved address', () => {
+      renderReport({
+        inputType: 'ens',
+        metadata: {
+          ensName: 'vitalik.eth',
+          resolvedAddress: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
+          resolutionStatus: 'resolved' as const,
+        },
+      });
+      expect(screen.getByText('vitalik.eth')).toBeDefined();
+      expect(screen.getByText('Resolved')).toBeDefined();
+      expect(screen.getByText('0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045')).toBeDefined();
+    });
+
+    it('renders ENS resolution failure', () => {
+      renderReport({
+        inputType: 'ens',
+        metadata: {
+          ensName: 'nonexistent.eth',
+          resolvedAddress: '',
+          resolutionStatus: 'failed' as const,
+          resolutionError: 'ENS name does not resolve',
+        },
+      });
+      expect(screen.getByText('Failed')).toBeDefined();
+      expect(screen.getByText('ENS name does not resolve')).toBeDefined();
+    });
+  });
+
   describe('score explainer', () => {
     it('toggles score explainer on ? button click', () => {
       renderReport();

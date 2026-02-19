@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { detectInputType, isBitcoinAddress, isSolanaAddress } from './detectInput';
+import { detectInputType, isBitcoinAddress, isSolanaAddress, isEnsName } from './detectInput';
 
 // ============================================================================
 // detectInputType — unit tests
@@ -43,6 +43,44 @@ describe('detectInputType', () => {
     it('does not detect 0x addresses as URLs', () => {
       // 0x + 40 hex chars looks like "0xABC...something.com" but should NOT match as URL
       expect(detectInputType('0xdAC17F958D2ee523a2206206994597C13D831ec7')).not.toBe('url');
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // ENS name detection
+  // -------------------------------------------------------------------------
+  describe('ENS name detection', () => {
+    it('detects valid ENS name (*.eth)', () => {
+      expect(detectInputType('vitalik.eth')).toBe('ens');
+    });
+
+    it('detects ENS name with hyphens', () => {
+      expect(detectInputType('multi-word-name.eth')).toBe('ens');
+    });
+
+    it('detects ENS subdomain', () => {
+      expect(detectInputType('pay.vitalik.eth')).toBe('ens');
+    });
+
+    it('detects ENS with numbers', () => {
+      expect(detectInputType('wallet123.eth')).toBe('ens');
+    });
+
+    it('is case insensitive', () => {
+      expect(detectInputType('VITALIK.ETH')).toBe('ens');
+      expect(detectInputType('Vitalik.Eth')).toBe('ens');
+    });
+
+    it('does not detect .com as ENS', () => {
+      expect(detectInputType('example.com')).toBe('url');
+    });
+
+    it('does not detect https://something.eth as ENS', () => {
+      expect(detectInputType('https://vitalik.eth')).toBe('url');
+    });
+
+    it('handles whitespace around ENS name', () => {
+      expect(detectInputType('  vitalik.eth  ')).toBe('ens');
     });
   });
 
@@ -266,5 +304,39 @@ describe('isSolanaAddress', () => {
 
   it('returns false for string with invalid Base58 chars', () => {
     expect(isSolanaAddress('0000000000000000000000000000000000000000000')).toBe(false);
+  });
+});
+
+// ============================================================================
+// isEnsName — unit tests
+// ============================================================================
+
+describe('isEnsName', () => {
+  it('returns true for simple ENS name', () => {
+    expect(isEnsName('vitalik.eth')).toBe(true);
+  });
+
+  it('returns true for ENS name with hyphens', () => {
+    expect(isEnsName('my-wallet.eth')).toBe(true);
+  });
+
+  it('returns true for ENS subdomain', () => {
+    expect(isEnsName('pay.vitalik.eth')).toBe(true);
+  });
+
+  it('returns true for uppercase ENS', () => {
+    expect(isEnsName('VITALIK.ETH')).toBe(true);
+  });
+
+  it('returns false for .com domain', () => {
+    expect(isEnsName('example.com')).toBe(false);
+  });
+
+  it('returns false for empty string', () => {
+    expect(isEnsName('')).toBe(false);
+  });
+
+  it('returns false for bare .eth', () => {
+    expect(isEnsName('.eth')).toBe(false);
   });
 });

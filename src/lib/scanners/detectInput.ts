@@ -16,12 +16,25 @@ export function isSolanaAddress(input: string): boolean {
   return SOLANA_RE.test(input) && !isBitcoinAddress(input);
 }
 
+// ENS name: one or more labels ending with .eth (supports subdomains like pay.vitalik.eth)
+const ENS_RE = /^([a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?\.)+eth$/i;
+
+export function isEnsName(input: string): boolean {
+  return ENS_RE.test(input.trim());
+}
+
 export function detectInputType(input: string): InputType {
   const trimmed = input.trim();
 
   // URL detection
   if (/^https?:\/\//i.test(trimmed) || /^www\./i.test(trimmed)) {
     return 'url';
+  }
+
+  // ENS name detection — must come BEFORE domain-like URL pattern
+  // because *.eth matches the domain regex
+  if (ENS_RE.test(trimmed)) {
+    return 'ens';
   }
 
   // Domain-like patterns (e.g., something.com)

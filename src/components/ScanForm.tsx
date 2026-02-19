@@ -7,6 +7,7 @@ function detectInputHint(value: string): string | null {
   const t = value.trim();
   if (!t) return null;
   if (/^https?:\/\//i.test(t) || /^www\./i.test(t)) return 'URL detected';
+  if (/^([a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?\.)+eth$/i.test(t)) return 'ENS name detected';
   if (/^[a-zA-Z0-9][a-zA-Z0-9-]*\.[a-zA-Z]{2,}/.test(t) && !t.startsWith('0x')) return 'URL detected';
   if (/^0x[a-fA-F0-9]{64}$/.test(t)) return 'Transaction hash detected';
   if (/^0x[a-fA-F0-9]{40}$/.test(t)) return 'Token / wallet address detected';
@@ -126,7 +127,7 @@ export default function ScanForm({ onScanComplete, onScanStart }: ScanFormProps)
 
       {/* Supported types hint */}
       <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
-        {['URLs', 'Token Contracts', 'Tx Hashes', 'Wallets', 'BTC Addresses', 'Solana Tokens'].map((type) => (
+        {['URLs', 'Token Contracts', 'Tx Hashes', 'Wallets', 'BTC Addresses', 'Solana Tokens', 'ENS Names'].map((type) => (
           <span key={type} className="text-[11px] text-gray-500 px-2.5 py-1 rounded-full border border-gray-800 bg-gray-900/50">
             {type}
           </span>

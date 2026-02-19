@@ -1,4 +1,4 @@
-export type InputType = 'url' | 'token' | 'txHash' | 'wallet' | 'btcWallet' | 'solanaToken' | 'invalidAddress' | 'unknown';
+export type InputType = 'url' | 'token' | 'txHash' | 'wallet' | 'btcWallet' | 'solanaToken' | 'ens' | 'invalidAddress' | 'unknown';
 
 export type RiskLevel = 'SAFE' | 'SUSPICIOUS' | 'DANGEROUS';
 
@@ -104,7 +104,19 @@ export interface SolanaMetadata {
   mintAddress?: string;
 }
 
-export type ReportMetadata = TokenMetadata | UrlMetadata | TxMetadata | WalletMetadata | SolanaMetadata;
+export interface EnsMetadata {
+  ensName: string;
+  resolvedAddress: string;
+  resolutionStatus: 'resolved' | 'failed';
+  resolutionError?: string;
+  chain?: string;
+  explorerUrls?: { name: string; url: string }[];
+  goPlusFlags?: string[];
+  goPlusChecked?: boolean;
+  isFlagged?: boolean;
+}
+
+export type ReportMetadata = TokenMetadata | UrlMetadata | TxMetadata | WalletMetadata | SolanaMetadata | EnsMetadata;
 
 export interface SafetyReport {
   inputType: InputType;

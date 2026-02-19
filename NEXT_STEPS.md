@@ -69,7 +69,7 @@ All Phase 1 items have been implemented.
 
 | Feature | Status | Description |
 |---------|--------|-------------|
-| ENS / .eth resolution | Not started | Resolve .eth names and scan underlying address |
+| ENS / .eth resolution | Complete | Resolve .eth names via public RPC, scan underlying wallet, ENS metadata card |
 | Browser extension | Not started | Right-click "Check with ChainShield", intercept wallet prompts |
 | Telegram / Discord bot | Not started | Scan links shared in group chats |
 | Bulk scan API | Not started | Scan multiple addresses/URLs in single request |

@@ -91,6 +91,14 @@ describe('ScanForm', () => {
       expect(screen.getByText('Solana address detected')).toBeDefined();
     });
 
+    it('shows ENS hint for .eth input', () => {
+      renderForm();
+      fireEvent.change(screen.getByPlaceholderText(/paste a url/i), {
+        target: { value: 'vitalik.eth' },
+      });
+      expect(screen.getByText('ENS name detected')).toBeDefined();
+    });
+
     it('shows unknown format for unrecognised long input', () => {
       renderForm();
       fireEvent.change(screen.getByPlaceholderText(/paste a url/i), {

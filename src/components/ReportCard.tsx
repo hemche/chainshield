@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { SafetyReport, TokenMetadata, UrlMetadata, TxMetadata, WalletMetadata, SolanaMetadata, CheckItem } from '@/types';
+import { SafetyReport, TokenMetadata, UrlMetadata, TxMetadata, WalletMetadata, SolanaMetadata, EnsMetadata, CheckItem } from '@/types';
 import RiskScore from './RiskScore';
 import RiskBadge from './RiskBadge';
 
@@ -18,6 +18,7 @@ const inputTypeLabels: Record<string, string> = {
   wallet: 'Wallet Address',
   btcWallet: 'Bitcoin Address',
   solanaToken: 'Solana Token',
+  ens: 'ENS Name',
   invalidAddress: 'Invalid Address',
   unknown: 'Unknown Input',
 };
@@ -364,6 +365,49 @@ function TxMetadataCard({ metadata, hash }: { metadata: TxMetadata; hash: string
   );
 }
 
+function EnsMetadataCard({ metadata }: { metadata: EnsMetadata }) {
+  return (
+    <div className="space-y-3">
+      <div className="grid grid-cols-2 gap-2.5">
+        <MetadataCell label="ENS Name" value={metadata.ensName} />
+        <MetadataCell
+          label="Resolution"
+          value={
+            <span className={metadata.resolutionStatus === 'resolved' ? 'text-emerald-400' : 'text-red-400'}>
+              {metadata.resolutionStatus === 'resolved' ? 'Resolved' : 'Failed'}
+            </span>
+          }
+        />
+        {metadata.resolvedAddress && (
+          <MetadataCell
+            label="Resolved Address"
+            value={
+              <span className="font-mono text-xs break-all">
+                {metadata.resolvedAddress}
+              </span>
+            }
+            className="col-span-2"
+          />
+        )}
+        {metadata.resolutionError && (
+          <MetadataCell
+            label="Error"
+            value={<span className="text-red-400">{metadata.resolutionError}</span>}
+            className="col-span-2"
+          />
+        )}
+      </div>
+      {metadata.explorerUrls && metadata.explorerUrls.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {metadata.explorerUrls.map((explorer) => (
+            <ExternalLink key={explorer.name} href={explorer.url}>{explorer.name}</ExternalLink>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ── Section wrapper ────────────────────────────────────── */
 
 function Section({ title, children, className }: { title?: string; children: React.ReactNode; className?: string }) {
@@ -553,6 +597,7 @@ export default function ReportCard({ report, onCopyReport, onNewScan }: ReportCa
           {report.inputType === 'url' && <UrlMetadataCard metadata={report.metadata as UrlMetadata} />}
           {(report.inputType === 'wallet' || report.inputType === 'btcWallet') && <WalletMetadataCard metadata={report.metadata as WalletMetadata} />}
           {report.inputType === 'txHash' && <TxMetadataCard metadata={report.metadata as TxMetadata} hash={report.inputValue} />}
+          {report.inputType === 'ens' && <EnsMetadataCard metadata={report.metadata as EnsMetadata} />}
         </Section>
       )}
 

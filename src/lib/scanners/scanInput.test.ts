@@ -51,6 +51,15 @@ vi.mock('./scanSolanaToken', () => ({
   }),
 }));
 
+vi.mock('./scanEns', () => ({
+  scanEns: vi.fn().mockResolvedValue({
+    inputType: 'ens', inputValue: 'vitalik.eth', riskScore: 5, riskLevel: 'SAFE',
+    confidence: 'MEDIUM', confidenceReason: 'mock', summary: 'mock', scoreBreakdown: [],
+    findings: [{ message: 'ENS name resolved', severity: 'info' }],
+    recommendations: [], timestamp: '2026-01-01T00:00:00.000Z',
+  }),
+}));
+
 vi.mock('./scanInvalidAddress', () => ({
   scanInvalidAddress: vi.fn().mockResolvedValue({
     inputType: 'invalidAddress', inputValue: 'bad', riskScore: 70, riskLevel: 'DANGEROUS',
@@ -73,6 +82,7 @@ import { scanWallet } from './scanWallet';
 import { scanBtcWallet } from './scanBtcWallet';
 import { scanSolanaToken } from './scanSolanaToken';
 import { scanInvalidAddress } from './scanInvalidAddress';
+import { scanEns } from './scanEns';
 import { isValidEvmAddress, isValidBitcoinAddress } from '@/lib/validation/addressValidation';
 
 beforeEach(() => {
@@ -220,6 +230,21 @@ describe('scanInput', () => {
     it('routes Legacy BTC address to scanBtcWallet', async () => {
       await scanInput('1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa');
       expect(scanBtcWallet).toHaveBeenCalled();
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // ENS name routing
+  // -------------------------------------------------------------------------
+  describe('ENS name routing', () => {
+    it('routes *.eth names to scanEns', async () => {
+      await scanInput('vitalik.eth');
+      expect(scanEns).toHaveBeenCalledWith('vitalik.eth');
+    });
+
+    it('routes subdomain ENS names to scanEns', async () => {
+      await scanInput('pay.vitalik.eth');
+      expect(scanEns).toHaveBeenCalledWith('pay.vitalik.eth');
     });
   });
 
