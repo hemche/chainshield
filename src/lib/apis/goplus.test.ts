@@ -186,14 +186,13 @@ describe('fetchNftSecurity', () => {
   const ADDRESS = '0xbc4ca0eda7647a8ab7c2061c2e118a18a936f13d';
 
   it('returns NFT data when found on Ethereum', async () => {
+    // GoPlus NFT endpoint returns flat result (not nested under address)
     mockGoPlusResponse({
-      [ADDRESS]: {
-        nft_name: 'BoredApeYachtClub',
-        nft_symbol: 'BAYC',
-        nft_erc: 'erc721',
-        malicious_nft_contract: '0',
-        trust_list: '1',
-      },
+      nft_name: 'BoredApeYachtClub',
+      nft_symbol: 'BAYC',
+      nft_erc: 'erc721',
+      malicious_nft_contract: 0,
+      trust_list: 1,
     });
 
     const { data, chainId, error } = await fetchNftSecurity(ADDRESS);
@@ -201,16 +200,14 @@ describe('fetchNftSecurity', () => {
     expect(chainId).toBe(1);
     expect(data).toBeDefined();
     expect(data!.nft_name).toBe('BoredApeYachtClub');
-    expect(data!.trust_list).toBe('1');
+    expect(data!.trust_list).toBe(1);
   });
 
   it('falls through to BSC when Ethereum has no data', async () => {
-    // Ethereum: empty result
+    // Ethereum: no nft_name/nft_erc → treated as no data
     mockGoPlusResponse({});
     // BSC: has data
-    mockGoPlusResponse({
-      [ADDRESS]: { nft_name: 'BSC NFT', nft_erc: 'erc721' },
-    });
+    mockGoPlusResponse({ nft_name: 'BSC NFT', nft_erc: 'erc721' });
 
     const { data, chainId, error } = await fetchNftSecurity(ADDRESS);
     expect(error).toBeNull();
@@ -234,9 +231,7 @@ describe('fetchNftSecurity', () => {
     const abortError = new DOMException('The operation was aborted', 'AbortError');
     vi.mocked(fetch).mockRejectedValueOnce(abortError);
     // BSC: has data
-    mockGoPlusResponse({
-      [ADDRESS]: { nft_name: 'Fallback NFT' },
-    });
+    mockGoPlusResponse({ nft_name: 'Fallback NFT', nft_erc: 'erc721' });
 
     const { data, chainId } = await fetchNftSecurity(ADDRESS);
     expect(chainId).toBe(56);
@@ -252,9 +247,7 @@ describe('fetchNftSecurity', () => {
   });
 
   it('uses cache on repeated calls', async () => {
-    mockGoPlusResponse({
-      [ADDRESS]: { nft_name: 'CachedNFT' },
-    });
+    mockGoPlusResponse({ nft_name: 'CachedNFT', nft_erc: 'erc721' });
 
     const first = await fetchNftSecurity(ADDRESS);
     const second = await fetchNftSecurity(ADDRESS);

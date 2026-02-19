@@ -21,19 +21,21 @@ function makeCleanNft(overrides = {}) {
     nft_symbol: 'BAYC',
     nft_description: 'A collection of 10,000 unique Bored Ape NFTs',
     nft_erc: 'erc721',
-    nft_open_source: '1',
-    nft_proxy: '0',
-    privileged_minting: '0',
-    privileged_burn: '0',
-    self_destruct: '0',
-    transfer_without_approval: '0',
-    oversupply_minting: '0',
-    restricted_approval: '0',
-    trust_list: '1',
-    malicious_nft_contract: '0',
+    nft_open_source: 1,
+    nft_proxy: 0,
+    privileged_minting: { value: -1, owner_address: '0x0000000000000000000000000000000000000000', owner_type: 'blackhole' },
+    privileged_burn: { value: 0, owner_address: null, owner_type: null },
+    self_destruct: { value: 0, owner_address: null, owner_type: null },
+    transfer_without_approval: { value: 0, owner_address: null, owner_type: null },
+    oversupply_minting: null,
+    restricted_approval: 0,
+    trust_list: 0,
+    malicious_nft_contract: 0,
     website_url: 'https://boredapeyachtclub.com',
     discord_url: 'https://discord.gg/bayc',
     twitter_url: 'https://twitter.com/BoredApeYC',
+    nft_items: 10000,
+    nft_owner_number: 5568,
     ...overrides,
   };
 }
@@ -73,8 +75,8 @@ describe('Clean NFT (trusted, all checks pass)', () => {
     expect(report.confidence).toBe('HIGH');
   });
 
-  it('includes trust list finding', async () => {
-    mockNft(makeCleanNft());
+  it('includes trust list finding when on trust list', async () => {
+    mockNft(makeCleanNft({ trust_list: 1 }));
     const report = await scanNft(VALID_ADDRESS);
     expect(report.findings.some(f => f.message.includes('trust list'))).toBe(true);
   });
@@ -92,7 +94,7 @@ describe('Clean NFT (trusted, all checks pass)', () => {
     expect(meta.name).toBe('BoredApeYachtClub');
     expect(meta.symbol).toBe('BAYC');
     expect(meta.tokenStandard).toBe('ERC-721');
-    expect(meta.onTrustList).toBe(true);
+    expect(meta.onTrustList).toBe(false);
     expect(meta.goPlusChecked).toBe(true);
     expect(meta.explorerUrl).toContain(VALID_ADDRESS);
     expect(meta.websiteUrl).toBe('https://boredapeyachtclub.com');
@@ -105,7 +107,7 @@ describe('Clean NFT (trusted, all checks pass)', () => {
 
 describe('Malicious NFT contract', () => {
   it('returns DANGEROUS with score >= 60', async () => {
-    mockNft(makeCleanNft({ malicious_nft_contract: '1', trust_list: '0' }));
+    mockNft(makeCleanNft({ malicious_nft_contract: 1, trust_list: 0 }));
     const report = await scanNft(VALID_ADDRESS);
     expect(report.riskLevel).toBe('DANGEROUS');
     expect(report.riskScore).toBeGreaterThanOrEqual(60);
@@ -115,7 +117,7 @@ describe('Malicious NFT contract', () => {
 
 describe('Transfer without approval', () => {
   it('returns DANGEROUS with score >= 60', async () => {
-    mockNft(makeCleanNft({ transfer_without_approval: '1', trust_list: '0' }));
+    mockNft(makeCleanNft({ transfer_without_approval: { value: 1 }, trust_list: 0 }));
     const report = await scanNft(VALID_ADDRESS);
     expect(report.riskLevel).toBe('DANGEROUS');
     expect(report.riskScore).toBeGreaterThanOrEqual(60);
@@ -125,7 +127,7 @@ describe('Transfer without approval', () => {
 
 describe('Self-destruct capability', () => {
   it('adds danger finding with scoreOverride 50', async () => {
-    mockNft(makeCleanNft({ self_destruct: '1', trust_list: '0' }));
+    mockNft(makeCleanNft({ self_destruct: { value: 1 }, trust_list: 0 }));
     const report = await scanNft(VALID_ADDRESS);
     expect(report.findings.some(f => f.message.includes('selfdestruct') && f.severity === 'danger')).toBe(true);
     expect(report.riskLevel).not.toBe('SAFE');
@@ -134,7 +136,7 @@ describe('Self-destruct capability', () => {
 
 describe('Oversupply minting', () => {
   it('adds danger finding with scoreOverride 50', async () => {
-    mockNft(makeCleanNft({ oversupply_minting: '1', trust_list: '0' }));
+    mockNft(makeCleanNft({ oversupply_minting: 1, trust_list: 0 }));
     const report = await scanNft(VALID_ADDRESS);
     expect(report.findings.some(f => f.message.includes('beyond declared max supply') && f.severity === 'danger')).toBe(true);
   });
@@ -146,7 +148,7 @@ describe('Oversupply minting', () => {
 
 describe('Privileged minting', () => {
   it('adds high severity finding', async () => {
-    mockNft(makeCleanNft({ privileged_minting: '1', trust_list: '0' }));
+    mockNft(makeCleanNft({ privileged_minting: { value: 1 }, trust_list: 0 }));
     const report = await scanNft(VALID_ADDRESS);
     expect(report.findings.some(f => f.message.includes('privileged minting') && f.severity === 'high')).toBe(true);
   });
@@ -154,7 +156,7 @@ describe('Privileged minting', () => {
 
 describe('Not open source', () => {
   it('adds high severity finding', async () => {
-    mockNft(makeCleanNft({ nft_open_source: '0', trust_list: '0' }));
+    mockNft(makeCleanNft({ nft_open_source: 0, trust_list: 0 }));
     const report = await scanNft(VALID_ADDRESS);
     expect(report.findings.some(f => f.message.includes('NOT verified') && f.severity === 'high')).toBe(true);
   });
@@ -166,7 +168,7 @@ describe('Not open source', () => {
 
 describe('Proxy contract', () => {
   it('adds medium finding with scoreOverride 15', async () => {
-    mockNft(makeCleanNft({ nft_proxy: '1', trust_list: '0' }));
+    mockNft(makeCleanNft({ nft_proxy: 1, trust_list: 0 }));
     const report = await scanNft(VALID_ADDRESS);
     expect(report.findings.some(f => f.message.includes('proxy') && f.severity === 'medium')).toBe(true);
   });
@@ -174,7 +176,7 @@ describe('Proxy contract', () => {
 
 describe('Privileged burn', () => {
   it('adds medium finding', async () => {
-    mockNft(makeCleanNft({ privileged_burn: '1', trust_list: '0' }));
+    mockNft(makeCleanNft({ privileged_burn: { value: 1 }, trust_list: 0 }));
     const report = await scanNft(VALID_ADDRESS);
     expect(report.findings.some(f => f.message.includes('privileged burn') && f.severity === 'medium')).toBe(true);
   });
@@ -182,7 +184,7 @@ describe('Privileged burn', () => {
 
 describe('Restricted approval', () => {
   it('adds medium finding', async () => {
-    mockNft(makeCleanNft({ restricted_approval: '1', trust_list: '0' }));
+    mockNft(makeCleanNft({ restricted_approval: 1, trust_list: 0 }));
     const report = await scanNft(VALID_ADDRESS);
     expect(report.findings.some(f => f.message.includes('restricted approval') && f.severity === 'medium')).toBe(true);
   });
@@ -230,14 +232,14 @@ describe('GoPlus unavailable', () => {
 
 describe('Summary and next step', () => {
   it('includes malicious summary for malicious contract', async () => {
-    mockNft(makeCleanNft({ malicious_nft_contract: '1', trust_list: '0' }));
+    mockNft(makeCleanNft({ malicious_nft_contract: 1, trust_list: 0 }));
     const report = await scanNft(VALID_ADDRESS);
     expect(report.summary).toContain('MALICIOUS');
     expect(report.nextStep).toContain('Do not interact');
   });
 
   it('includes trust list summary for trusted collection', async () => {
-    mockNft(makeCleanNft());
+    mockNft(makeCleanNft({ trust_list: 1 }));
     const report = await scanNft(VALID_ADDRESS);
     expect(report.summary).toContain('trust list');
   });
@@ -251,7 +253,7 @@ describe('Summary and next step', () => {
   });
 
   it('adds gov database recommendation for risky NFTs', async () => {
-    mockNft(makeCleanNft({ malicious_nft_contract: '1', trust_list: '0' }));
+    mockNft(makeCleanNft({ malicious_nft_contract: 1, trust_list: 0 }));
     const report = await scanNft(VALID_ADDRESS);
     expect(report.recommendations.some(r => r.includes('government scam databases'))).toBe(true);
   });

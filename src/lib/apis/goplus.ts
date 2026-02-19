@@ -22,27 +22,38 @@ export interface GoPlusTokenSecurity {
   creator_address?: string;
 }
 
+// GoPlus NFT fields can be numbers OR objects like { value: 0|1|-1, owner_address, owner_type }
+export type GoPlusNftFlag = number | { value: number; owner_address?: string | null; owner_type?: string | null } | null;
+
 export interface GoPlusNftSecurity {
   nft_name?: string;
   nft_symbol?: string;
   nft_description?: string;
   nft_erc?: string;
-  nft_open_source?: string;
-  nft_proxy?: string;
-  privileged_minting?: string;
-  privileged_burn?: string;
-  self_destruct?: string;
-  transfer_without_approval?: string;
-  oversupply_minting?: string;
-  restricted_approval?: string;
-  trust_list?: string;
-  malicious_nft_contract?: string;
-  website_url?: string;
-  discord_url?: string;
-  github_url?: string;
-  twitter_url?: string;
-  medium_url?: string;
-  telegram_url?: string;
+  nft_open_source?: GoPlusNftFlag;
+  nft_proxy?: GoPlusNftFlag;
+  privileged_minting?: GoPlusNftFlag;
+  privileged_burn?: GoPlusNftFlag;
+  self_destruct?: GoPlusNftFlag;
+  transfer_without_approval?: GoPlusNftFlag;
+  oversupply_minting?: GoPlusNftFlag;
+  restricted_approval?: GoPlusNftFlag;
+  trust_list?: GoPlusNftFlag;
+  malicious_nft_contract?: GoPlusNftFlag;
+  website_url?: string | null;
+  discord_url?: string | null;
+  github_url?: string | null;
+  twitter_url?: string | null;
+  medium_url?: string | null;
+  telegram_url?: string | null;
+  nft_items?: number;
+  nft_owner_number?: number;
+  total_volume?: number;
+  traded_volume_24h?: number;
+  average_price_24h?: number;
+  sales_24h?: number;
+  nft_verified?: number;
+  same_nfts?: Array<{ nft_address: string; nft_name: string; nft_owner_number: number }>;
 }
 
 export interface GoPlusAddressSecurity {
@@ -186,6 +197,10 @@ export async function fetchAddressSecurity(
  * Fetch NFT contract security data from GoPlus.
  * Tries multiple chains sequentially (Ethereum first, then BSC, Polygon).
  * Returns on the first chain that has data.
+ *
+ * NOTE: GoPlus NFT endpoint returns result as a flat object (not nested under
+ * the address key like the token endpoint). Fields can be numbers, objects
+ * with { value, owner_address, owner_type }, or null.
  */
 export async function fetchNftSecurity(
   address: string,
@@ -196,7 +211,8 @@ export async function fetchNftSecurity(
   for (let i = 0; i < chainIds.length; i++) {
     const chainId = chainIds[i];
     const endpoint = `/nft_security/${chainId}?contract_addresses=${lowerAddress}`;
-    const result = await fetchGoPlus<Record<string, GoPlusNftSecurity>>(endpoint);
+    // GoPlus NFT result is flat — not nested under address key
+    const result = await fetchGoPlus<GoPlusNftSecurity>(endpoint);
 
     if (!result.data) {
       if (i === chainIds.length - 1) {
@@ -205,9 +221,9 @@ export async function fetchNftSecurity(
       continue;
     }
 
-    const nftData = result.data[lowerAddress];
-    if (nftData && Object.keys(nftData).length > 0) {
-      return { data: nftData, chainId, error: null };
+    // Check if we got meaningful data (has nft_name or nft_erc)
+    if (result.data.nft_name || result.data.nft_erc) {
+      return { data: result.data, chainId, error: null };
     }
   }
 

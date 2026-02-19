@@ -216,7 +216,7 @@ describe('scanInput', () => {
         timestamp: '2026-01-01T00:00:00.000Z',
       });
       vi.mocked(fetchNftSecurity).mockResolvedValueOnce({
-        data: { nft_name: 'TestNFT', nft_erc: 'erc721' },
+        data: { nft_name: 'TestNFT', nft_erc: 'erc721' } as Record<string, unknown>,
         chainId: 1,
         error: null,
       });
