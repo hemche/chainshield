@@ -27,7 +27,7 @@ export async function scanInput(input: string): Promise<SafetyReport> {
       confidenceReason: 'No input provided.',
       summary: 'No input was provided to scan.',
       scoreBreakdown: [],
-      findings: [{ message: 'No input provided', severity: 'low' }],
+      findings: [{ message: 'No input provided', severity: 'low', messageKey: 'no_input' }],
       recommendations: ['Please provide a URL, contract address, transaction hash, or wallet address'],
       timestamp: new Date().toISOString(),
     };
@@ -107,7 +107,7 @@ export async function scanInput(input: string): Promise<SafetyReport> {
           ],
           nextStep: 'Try looking up this address on a chain-specific block explorer.',
           findings: [
-            { message: 'Address format detected but blockchain not supported', severity: 'info', scoreOverride: 0 },
+            { message: 'Address format detected but blockchain not supported', severity: 'info', scoreOverride: 0, messageKey: 'unknown_not_supported' },
           ],
           recommendations: [
             'Look up this address on a chain-specific block explorer',
@@ -131,8 +131,8 @@ export async function scanInput(input: string): Promise<SafetyReport> {
         ],
         nextStep: 'Verify your input is a valid URL, contract address, transaction hash, or wallet address.',
         findings: [
-          { message: 'Could not determine input type', severity: 'medium' },
-          { message: 'Input does not match any known format (URL, contract, tx hash, wallet)', severity: 'medium' },
+          { message: 'Could not determine input type', severity: 'medium', messageKey: 'unknown_cannot_determine' },
+          { message: 'Input does not match any known format (URL, contract, tx hash, wallet)', severity: 'medium', messageKey: 'unknown_no_match' },
         ],
         recommendations: [
           'Ensure your input is a valid URL, EVM contract address (0x... 42 chars), transaction hash (0x... 66 chars), or wallet address',

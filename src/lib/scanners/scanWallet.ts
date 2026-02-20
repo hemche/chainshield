@@ -18,24 +18,28 @@ export async function scanWallet(address: string): Promise<SafetyReport> {
     findings.push({
       message: `This address is flagged as: ${blocklistMatch.label} (source: ${blocklistMatch.source})`,
       severity: 'danger',
+      messageKey: 'blocklist_flagged',
+      messageParams: { label: blocklistMatch.label, source: blocklistMatch.source },
     });
     metadata.isFlagged = true;
   }
 
   // Basic validation
   if (!trimmed.startsWith('0x')) {
-    findings.push({ message: 'Wallet address should start with 0x', severity: 'high' });
+    findings.push({ message: 'Wallet address should start with 0x', severity: 'high', messageKey: 'wallet_no_0x' });
   }
 
   if (trimmed.length !== 42) {
     findings.push({
       message: `Invalid address length: ${trimmed.length} characters (expected 42)`,
       severity: 'high',
+      messageKey: 'wallet_invalid_length',
+      messageParams: { length: trimmed.length },
     });
   }
 
   if (!/^0x[a-fA-F0-9]{40}$/.test(trimmed)) {
-    findings.push({ message: 'Address contains invalid characters', severity: 'high' });
+    findings.push({ message: 'Address contains invalid characters', severity: 'high', messageKey: 'wallet_invalid_chars' });
   }
 
   const isValidFormat = findings.length === 0;
@@ -44,6 +48,7 @@ export async function scanWallet(address: string): Promise<SafetyReport> {
     findings.push({
       message: 'Wallet address format is valid',
       severity: 'low',
+      messageKey: 'wallet_valid',
     });
 
     // Check if it might also be a token contract (try DexScreener)
@@ -64,6 +69,7 @@ export async function scanWallet(address: string): Promise<SafetyReport> {
           findings.push({
             message: 'This address is also a token contract with active trading pairs',
             severity: 'low',
+            messageKey: 'wallet_is_token',
           });
         }
       }
@@ -123,6 +129,8 @@ export async function scanWallet(address: string): Promise<SafetyReport> {
               message: `Address flagged for ${check.label} (GoPlus)`,
               severity: check.severity,
               ...(check.override ? { scoreOverride: check.override } : {}),
+              messageKey: 'wallet_flagged',
+              messageParams: { check: check.label },
             });
           }
         }
@@ -137,6 +145,7 @@ export async function scanWallet(address: string): Promise<SafetyReport> {
             message: 'Address not flagged in GoPlus security database',
             severity: 'info',
             scoreOverride: 0,
+            messageKey: 'wallet_clean',
           });
         }
       }

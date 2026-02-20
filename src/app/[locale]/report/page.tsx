@@ -2,9 +2,10 @@
 
 import { useSearchParams } from 'next/navigation';
 import { useEffect, useState, Suspense } from 'react';
+import { useTranslations, useLocale } from 'next-intl';
 import { SafetyReport } from '@/types';
 import ReportCard from '@/components/ReportCard';
-import Link from 'next/link';
+import { Link } from '@/i18n/routing';
 
 function ReportContent() {
   const searchParams = useSearchParams();
@@ -12,11 +13,14 @@ function ReportContent() {
   const [report, setReport] = useState<SafetyReport | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const t = useTranslations('report');
+  const tc = useTranslations('common');
+  const locale = useLocale();
 
   useEffect(() => {
     if (!input) {
       setLoading(false);
-      setError('No input provided. Go back to the scanner to run a scan.');
+      setError(t('noInput'));
       return;
     }
 
@@ -35,14 +39,14 @@ function ReportContent() {
         const data: SafetyReport = await response.json();
         setReport(data);
       } catch {
-        setError('Failed to generate report. Please try again.');
+        setError(t('scanFailed'));
       } finally {
         setLoading(false);
       }
     };
 
     runScan();
-  }, [input]);
+  }, [input, t]);
 
   const handleCopyReport = () => {
     if (!report) return;
@@ -78,7 +82,7 @@ function ReportContent() {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4">
         <div className="w-10 h-10 border-[3px] border-blue-500 border-t-transparent rounded-full animate-spin" />
-        <p className="text-gray-500 text-sm">Generating report...</p>
+        <p className="text-gray-500 text-sm">{t('generatingReport')}</p>
       </div>
     );
   }
@@ -91,7 +95,7 @@ function ReportContent() {
           href="/"
           className="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-sm font-medium transition-colors"
         >
-          Go to Scanner
+          {t('goToScanner')}
         </Link>
       </div>
     );
@@ -105,12 +109,12 @@ function ReportContent() {
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
         </svg>
-        Back to Scanner
+        {tc('backToScanner')}
       </Link>
       <ReportCard
         report={report}
         onCopyReport={handleCopyReport}
-        onNewScan={() => window.location.href = '/'}
+        onNewScan={() => window.location.href = `/${locale}`}
       />
     </div>
   );

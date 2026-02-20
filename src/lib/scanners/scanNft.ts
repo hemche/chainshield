@@ -38,12 +38,14 @@ export async function scanNft(address: string): Promise<SafetyReport> {
     findings.push({
       message: `This address is flagged as: ${blocklistMatch.label} (source: ${blocklistMatch.source})`,
       severity: 'danger',
+      messageKey: 'blocklist_flagged',
+      messageParams: { label: blocklistMatch.label, source: blocklistMatch.source },
     });
   }
 
   // Address format validation
   if (!/^0x[a-fA-F0-9]{40}$/.test(address)) {
-    findings.push({ message: 'Invalid contract address format', severity: 'high' });
+    findings.push({ message: 'Invalid contract address format', severity: 'high', messageKey: 'invalid_format' });
   }
 
   // GoPlus NFT Security + Sourcify (parallel)
@@ -94,6 +96,7 @@ export async function scanNft(address: string): Promise<SafetyReport> {
         message: 'NFT contract flagged as MALICIOUS by GoPlus',
         severity: 'danger',
         scoreOverride: 60,
+        messageKey: 'nft_malicious',
       });
       recommendations.push('Do NOT interact with this NFT contract — it has been flagged as malicious');
     }
@@ -103,6 +106,7 @@ export async function scanNft(address: string): Promise<SafetyReport> {
         message: 'Contract can transfer NFTs WITHOUT owner approval',
         severity: 'danger',
         scoreOverride: 60,
+        messageKey: 'nft_transfer_no_approval',
       });
       recommendations.push('This contract can steal your NFTs — do not approve or interact');
     }
@@ -112,6 +116,7 @@ export async function scanNft(address: string): Promise<SafetyReport> {
         message: 'Contract contains selfdestruct — can be destroyed',
         severity: 'danger',
         scoreOverride: 50,
+        messageKey: 'selfdestruct',
       });
     }
 
@@ -120,6 +125,7 @@ export async function scanNft(address: string): Promise<SafetyReport> {
         message: 'Contract can mint beyond declared max supply',
         severity: 'danger',
         scoreOverride: 50,
+        messageKey: 'nft_oversupply',
       });
     }
 
@@ -127,6 +133,7 @@ export async function scanNft(address: string): Promise<SafetyReport> {
       findings.push({
         message: 'Admin can mint NFTs at will (privileged minting)',
         severity: 'high',
+        messageKey: 'nft_privileged_minting',
       });
       recommendations.push('Admin-only minting can dilute the collection value');
     }
@@ -135,6 +142,7 @@ export async function scanNft(address: string): Promise<SafetyReport> {
       findings.push({
         message: 'Contract source code is NOT verified/open source',
         severity: 'high',
+        messageKey: 'not_open_source',
       });
     }
 
@@ -142,6 +150,7 @@ export async function scanNft(address: string): Promise<SafetyReport> {
       findings.push({
         message: 'Admin can burn NFTs (privileged burn)',
         severity: 'medium',
+        messageKey: 'nft_privileged_burn',
       });
     }
 
@@ -150,6 +159,7 @@ export async function scanNft(address: string): Promise<SafetyReport> {
         message: 'Contract is a proxy — logic can be changed',
         severity: 'medium',
         scoreOverride: 15,
+        messageKey: 'proxy_contract',
       });
     }
 
@@ -157,6 +167,7 @@ export async function scanNft(address: string): Promise<SafetyReport> {
       findings.push({
         message: 'Contract uses restricted approval patterns',
         severity: 'medium',
+        messageKey: 'nft_restricted_approval',
       });
     }
 
@@ -166,6 +177,7 @@ export async function scanNft(address: string): Promise<SafetyReport> {
         message: 'NFT collection is on the GoPlus trust list',
         severity: 'info',
         scoreOverride: 0,
+        messageKey: 'nft_trust_list',
       });
     }
 
@@ -174,6 +186,8 @@ export async function scanNft(address: string): Promise<SafetyReport> {
       findings.push({
         message: `${nft.same_nfts.length} copycat collection${nft.same_nfts.length > 1 ? 's' : ''} detected with the same name — verify you have the original`,
         severity: 'medium',
+        messageKey: 'nft_copycat',
+        messageParams: { count: nft.same_nfts.length },
       });
       recommendations.push('Verify the contract address matches the official collection — copycats exist');
     }
@@ -192,6 +206,7 @@ export async function scanNft(address: string): Promise<SafetyReport> {
         message: 'GoPlus NFT security audit passed — no red flags detected',
         severity: 'info',
         scoreOverride: 0,
+        messageKey: 'nft_audit_passed',
       });
     }
   }
@@ -204,11 +219,13 @@ export async function scanNft(address: string): Promise<SafetyReport> {
         message: 'Contract source code verified on Sourcify',
         severity: 'info',
         scoreOverride: 0,
+        messageKey: 'sourcify_verified',
       });
     } else {
       findings.push({
         message: 'Contract NOT verified on Sourcify',
         severity: 'low',
+        messageKey: 'sourcify_not_verified',
       });
     }
   }

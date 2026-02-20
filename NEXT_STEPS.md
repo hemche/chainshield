@@ -76,7 +76,7 @@ All Phase 1 items have been implemented.
 | NFT contract scanner | Complete | GoPlus NFT security API, malicious/selfdestruct/approval/proxy/minting detection, ERC-721/1155, Sourcify, 22 tests |
 | Historical risk tracking | Not started | Show risk score changes over time |
 | Community threat feed | Not started | Crowdsourced scam reports |
-| Multi-language (i18n) | Not started | Spanish + Chinese covers huge victim populations |
+| Multi-language (i18n) | Complete | English, Spanish (es), Chinese Simplified (zh) via next-intl. Locale prefix routing (/en/, /es/, /zh/). 380 translated keys per locale. |
 | PWA support | Not started | Installable progressive web app |
 | ML scoring | Not started | Train on labeled scam/legit data for dynamic weighting |
 | Nonce-based CSP | Deferred | Requires middleware.ts, forces all pages to dynamic rendering |

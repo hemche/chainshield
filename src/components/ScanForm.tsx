@@ -1,20 +1,23 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import { useTranslations } from 'next-intl';
 import { SafetyReport } from '@/types';
 
-function detectInputHint(value: string): string | null {
+type HintKey = 'url' | 'ens' | 'txHash' | 'tokenWallet' | 'typingHex' | 'hexAddress' | 'bitcoin' | 'solana' | 'unknown';
+
+function detectInputHintKey(value: string): HintKey | null {
   const t = value.trim();
   if (!t) return null;
-  if (/^https?:\/\//i.test(t) || /^www\./i.test(t)) return 'URL detected';
-  if (/^([a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?\.)+eth$/i.test(t)) return 'ENS name detected';
-  if (/^[a-zA-Z0-9][a-zA-Z0-9-]*\.[a-zA-Z]{2,}/.test(t) && !t.startsWith('0x')) return 'URL detected';
-  if (/^0x[a-fA-F0-9]{64}$/.test(t)) return 'Transaction hash detected';
-  if (/^0x[a-fA-F0-9]{40}$/.test(t)) return 'Token / wallet address detected';
-  if (/^0x[a-fA-F0-9]+$/.test(t)) return t.length < 42 ? 'Typing hex address...' : 'Hex address detected';
-  if (/^(bc1|[13])[a-zA-Z0-9]{24,}$/.test(t)) return 'Bitcoin address detected';
-  if (/^[2-9A-HJ-NP-Za-km-z][1-9A-HJ-NP-Za-km-z]{31,43}$/.test(t)) return 'Solana address detected';
-  if (t.length > 5) return 'Unknown format';
+  if (/^https?:\/\//i.test(t) || /^www\./i.test(t)) return 'url';
+  if (/^([a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?\.)+eth$/i.test(t)) return 'ens';
+  if (/^[a-zA-Z0-9][a-zA-Z0-9-]*\.[a-zA-Z]{2,}/.test(t) && !t.startsWith('0x')) return 'url';
+  if (/^0x[a-fA-F0-9]{64}$/.test(t)) return 'txHash';
+  if (/^0x[a-fA-F0-9]{40}$/.test(t)) return 'tokenWallet';
+  if (/^0x[a-fA-F0-9]+$/.test(t)) return t.length < 42 ? 'typingHex' : 'hexAddress';
+  if (/^(bc1|[13])[a-zA-Z0-9]{24,}$/.test(t)) return 'bitcoin';
+  if (/^[2-9A-HJ-NP-Za-km-z][1-9A-HJ-NP-Za-km-z]{31,43}$/.test(t)) return 'solana';
+  if (t.length > 5) return 'unknown';
   return null;
 }
 
@@ -27,12 +30,13 @@ export default function ScanForm({ onScanComplete, onScanStart }: ScanFormProps)
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const inputHint = useMemo(() => detectInputHint(input), [input]);
+  const hintKey = useMemo(() => detectInputHintKey(input), [input]);
+  const t = useTranslations('scanForm');
 
   const handleScan = async () => {
     const trimmed = input.trim();
     if (!trimmed) {
-      setError('Please enter a URL, contract address, transaction hash, or wallet address');
+      setError(t('emptyError'));
       return;
     }
 
@@ -55,7 +59,7 @@ export default function ScanForm({ onScanComplete, onScanStart }: ScanFormProps)
       const report: SafetyReport = await response.json();
       onScanComplete(report);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.');
+      setError(err instanceof Error ? err.message : t('genericError'));
     } finally {
       setLoading(false);
     }
@@ -67,6 +71,21 @@ export default function ScanForm({ onScanComplete, onScanStart }: ScanFormProps)
     }
   };
 
+  const supportedTypeKeys: Array<keyof typeof messages> = [
+    'urls', 'tokenContracts', 'nftContracts', 'txHashes', 'wallets', 'btcAddresses', 'solanaTokens', 'ensNames',
+  ];
+  // Workaround: directly reference keys
+  const messages = {
+    urls: t('supportedTypes.urls'),
+    tokenContracts: t('supportedTypes.tokenContracts'),
+    nftContracts: t('supportedTypes.nftContracts'),
+    txHashes: t('supportedTypes.txHashes'),
+    wallets: t('supportedTypes.wallets'),
+    btcAddresses: t('supportedTypes.btcAddresses'),
+    solanaTokens: t('supportedTypes.solanaTokens'),
+    ensNames: t('supportedTypes.ensNames'),
+  };
+
   return (
     <div className="w-full max-w-2xl mx-auto">
       <div className="flex flex-col gap-3">
@@ -76,7 +95,7 @@ export default function ScanForm({ onScanComplete, onScanStart }: ScanFormProps)
             value={input}
             onChange={(e) => { setInput(e.target.value); setError(''); }}
             onKeyDown={handleKeyDown}
-            placeholder="Paste a URL, contract address, tx hash, or wallet address..."
+            placeholder={t('placeholder')}
             className="w-full px-5 py-4.5 bg-gray-900 border border-gray-700 rounded-2xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500/30 text-base transition-all font-mono tracking-tight"
             disabled={loading}
             autoFocus
@@ -85,7 +104,7 @@ export default function ScanForm({ onScanComplete, onScanStart }: ScanFormProps)
             <button
               onClick={() => { setInput(''); setError(''); }}
               className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-600 hover:text-gray-300 transition-colors"
-              aria-label="Clear input"
+              aria-label={t('clearInput')}
             >
               <svg className="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -104,21 +123,21 @@ export default function ScanForm({ onScanComplete, onScanStart }: ScanFormProps)
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
               </svg>
-              Scanning...
+              {t('scanning')}
             </>
           ) : (
             <>
               <svg className="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
-              Scan Now
+              {t('scanButton')}
             </>
           )}
         </button>
       </div>
 
-      {inputHint && !error && !loading && (
-        <p className="mt-2 text-xs text-blue-400/70 text-center font-mono">{inputHint}</p>
+      {hintKey && !error && !loading && (
+        <p className="mt-2 text-xs text-blue-400/70 text-center font-mono">{t(`hints.${hintKey}`)}</p>
       )}
 
       {error && (
@@ -127,9 +146,9 @@ export default function ScanForm({ onScanComplete, onScanStart }: ScanFormProps)
 
       {/* Supported types hint */}
       <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
-        {['URLs', 'Token Contracts', 'NFT Contracts', 'Tx Hashes', 'Wallets', 'BTC Addresses', 'Solana Tokens', 'ENS Names'].map((type) => (
-          <span key={type} className="text-[11px] text-gray-500 px-2.5 py-1 rounded-full border border-gray-800 bg-gray-900/50">
-            {type}
+        {supportedTypeKeys.map((key) => (
+          <span key={key} className="text-[11px] text-gray-500 px-2.5 py-1 rounded-full border border-gray-800 bg-gray-900/50">
+            {messages[key]}
           </span>
         ))}
       </div>

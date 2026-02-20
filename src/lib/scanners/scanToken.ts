@@ -58,12 +58,14 @@ export async function scanToken(address: string): Promise<SafetyReport> {
     findings.push({
       message: `This address is flagged as: ${blocklistMatch.label} (source: ${blocklistMatch.source})`,
       severity: 'danger',
+      messageKey: 'blocklist_flagged',
+      messageParams: { label: blocklistMatch.label, source: blocklistMatch.source },
     });
   }
 
   // Basic address validation
   if (!/^0x[a-fA-F0-9]{40}$/.test(address)) {
-    findings.push({ message: 'Invalid contract address format', severity: 'high' });
+    findings.push({ message: 'Invalid contract address format', severity: 'high', messageKey: 'invalid_format' });
   }
 
   try {
@@ -92,6 +94,7 @@ export async function scanToken(address: string): Promise<SafetyReport> {
       findings.push({
         message: 'DexScreener returned no liquidity pairs — token may be unlisted or a scam',
         severity: 'danger',
+        messageKey: 'no_liquidity_pairs',
       });
       recommendations.push('Do not interact with this token unless verified on a block explorer');
       recommendations.push('Verify the contract address on a block explorer');
@@ -110,6 +113,7 @@ export async function scanToken(address: string): Promise<SafetyReport> {
           message: 'Token data is incomplete — API returned unexpected format.',
           severity: 'medium',
           scoreOverride: 20,
+          messageKey: 'incomplete_data',
         });
       }
 
@@ -146,6 +150,8 @@ export async function scanToken(address: string): Promise<SafetyReport> {
             message: `Token pair is extremely new (${metadata.pairAge} old)`,
             severity: 'danger',
             scoreOverride: 25,
+            messageKey: 'pair_extremely_new',
+            messageParams: { age: metadata.pairAge! },
           });
           recommendations.push('Extremely new tokens are very likely to be scams or rug pulls');
         } else if (ageDays < TOKEN_THRESHOLDS.pairAgeSuspiciousDays) {
@@ -153,6 +159,8 @@ export async function scanToken(address: string): Promise<SafetyReport> {
             message: `Token pair is very new (${metadata.pairAge} old)`,
             severity: 'medium',
             scoreOverride: 15,
+            messageKey: 'pair_very_new',
+            messageParams: { age: metadata.pairAge! },
           });
           recommendations.push('New tokens are significantly more likely to be scams or rug pulls');
         }
@@ -168,6 +176,8 @@ export async function scanToken(address: string): Promise<SafetyReport> {
           message: `Dangerously low liquidity: $${liquidity.toLocaleString()}`,
           severity: 'danger',
           scoreOverride: 50,
+          messageKey: 'dangerously_low_liquidity',
+          messageParams: { amount: liquidity.toLocaleString() },
         });
         recommendations.push('Tokens with very low liquidity can be easily manipulated or are likely scams');
       } else if (liquidity < TOKEN_THRESHOLDS.liquiditySuspicious) {
@@ -176,6 +186,8 @@ export async function scanToken(address: string): Promise<SafetyReport> {
           message: `Low liquidity: $${liquidity.toLocaleString()}`,
           severity: 'medium',
           scoreOverride: 25,
+          messageKey: 'low_liquidity',
+          messageParams: { amount: liquidity.toLocaleString() },
         });
         recommendations.push('Low liquidity makes it difficult to sell without large price impact');
       } else {
@@ -183,6 +195,8 @@ export async function scanToken(address: string): Promise<SafetyReport> {
           message: `Liquidity is healthy: $${liquidity.toLocaleString()}`,
           severity: 'info',
           scoreOverride: 0,
+          messageKey: 'healthy_liquidity',
+          messageParams: { amount: liquidity.toLocaleString() },
         });
       }
 
@@ -197,18 +211,24 @@ export async function scanToken(address: string): Promise<SafetyReport> {
             message: `Very low 24h volume: $${volume.toLocaleString()}`,
             severity: 'medium',
             scoreOverride: 15,
+            messageKey: 'very_low_volume',
+            messageParams: { amount: volume.toLocaleString() },
           });
         } else if (volume < TOKEN_THRESHOLDS.volumeLow) {
           findings.push({
             message: `Low 24h trading volume: $${volume.toLocaleString()}`,
             severity: 'medium',
             scoreOverride: 10,
+            messageKey: 'low_volume',
+            messageParams: { amount: volume.toLocaleString() },
           });
         } else {
           findings.push({
             message: `24h trading volume is healthy: $${volume.toLocaleString()}`,
             severity: 'info',
             scoreOverride: 0,
+            messageKey: 'healthy_volume',
+            messageParams: { amount: volume.toLocaleString() },
           });
         }
       }
@@ -227,6 +247,8 @@ export async function scanToken(address: string): Promise<SafetyReport> {
           findings.push({
             message: `Extreme 24h price pump: +${priceChange.toFixed(1)}%`,
             severity: 'danger',
+            messageKey: 'extreme_pump',
+            messageParams: { change: priceChange.toFixed(1) },
           });
           recommendations.push('Extreme price pumps are often followed by dumps — be very cautious');
         }
@@ -239,6 +261,8 @@ export async function scanToken(address: string): Promise<SafetyReport> {
               message: `Token shows high 24h volatility (±${absChange.toFixed(0)}%) — increased risk.`,
               severity: 'medium',
               scoreOverride: 10,
+              messageKey: 'high_volatility',
+              messageParams: { change: absChange.toFixed(0) },
             });
             if (priceChange < TOKEN_THRESHOLDS.priceDropThreshold) {
               recommendations.push('Large price drops may indicate a rug pull or whale dumping');
@@ -249,6 +273,8 @@ export async function scanToken(address: string): Promise<SafetyReport> {
               message: `Token shows moderate 24h volatility (±${absChange.toFixed(0)}%) — increased risk.`,
               severity: 'info',
               scoreOverride: 5,
+              messageKey: 'moderate_volatility',
+              messageParams: { change: absChange.toFixed(0) },
             });
           }
         }
@@ -263,6 +289,8 @@ export async function scanToken(address: string): Promise<SafetyReport> {
           message: `FDV ($${fdv.toLocaleString()}) is very high relative to liquidity ($${liquidity.toLocaleString()}) — high rug pull risk`,
           severity: 'medium',
           scoreOverride: 20,
+          messageKey: 'high_fdv_low_liquidity',
+          messageParams: { fdv: fdv.toLocaleString(), liquidity: liquidity.toLocaleString() },
         });
         recommendations.push('A very high FDV with low liquidity means the token could crash easily');
       }
@@ -272,6 +300,8 @@ export async function scanToken(address: string): Promise<SafetyReport> {
         findings.push({
           message: `Very low fully diluted valuation: $${fdv.toLocaleString()}`,
           severity: 'low',
+          messageKey: 'very_low_fdv',
+          messageParams: { amount: fdv.toLocaleString() },
         });
       }
 
@@ -313,6 +343,7 @@ export async function scanToken(address: string): Promise<SafetyReport> {
               message: 'Token flagged as HONEYPOT by GoPlus — cannot sell',
               severity: 'danger',
               scoreOverride: 60,
+              messageKey: 'honeypot',
             });
             recommendations.push('HONEYPOT: This token cannot be sold once purchased — do not buy');
           }
@@ -327,12 +358,16 @@ export async function scanToken(address: string): Promise<SafetyReport> {
                 message: `High sell tax: ${sellTaxPct.toFixed(1)}%`,
                 severity: 'danger',
                 scoreOverride: 50,
+                messageKey: 'high_sell_tax',
+                messageParams: { tax: sellTaxPct.toFixed(1) },
               });
             } else if (sellTaxPct > GOPLUS_CONFIG.taxSuspicious) {
               findings.push({
                 message: `Elevated sell tax: ${sellTaxPct.toFixed(1)}%`,
                 severity: 'medium',
                 scoreOverride: 20,
+                messageKey: 'elevated_sell_tax',
+                messageParams: { tax: sellTaxPct.toFixed(1) },
               });
             }
 
@@ -341,12 +376,16 @@ export async function scanToken(address: string): Promise<SafetyReport> {
                 message: `High buy tax: ${buyTaxPct.toFixed(1)}%`,
                 severity: 'danger',
                 scoreOverride: 50,
+                messageKey: 'high_buy_tax',
+                messageParams: { tax: buyTaxPct.toFixed(1) },
               });
             } else if (buyTaxPct > GOPLUS_CONFIG.taxSuspicious) {
               findings.push({
                 message: `Elevated buy tax: ${buyTaxPct.toFixed(1)}%`,
                 severity: 'medium',
                 scoreOverride: 20,
+                messageKey: 'elevated_buy_tax',
+                messageParams: { tax: buyTaxPct.toFixed(1) },
               });
             }
           }
@@ -355,6 +394,7 @@ export async function scanToken(address: string): Promise<SafetyReport> {
             findings.push({
               message: 'Contract source code is NOT verified/open source',
               severity: 'high',
+              messageKey: 'not_open_source',
             });
           }
 
@@ -362,6 +402,7 @@ export async function scanToken(address: string): Promise<SafetyReport> {
             findings.push({
               message: 'Token supply can be minted (increased) by owner',
               severity: 'medium',
+              messageKey: 'mintable',
             });
           }
 
@@ -369,6 +410,7 @@ export async function scanToken(address: string): Promise<SafetyReport> {
             findings.push({
               message: 'Contract has a hidden owner',
               severity: 'high',
+              messageKey: 'hidden_owner',
             });
           }
 
@@ -376,6 +418,7 @@ export async function scanToken(address: string): Promise<SafetyReport> {
             findings.push({
               message: 'Token slippage can be modified by owner',
               severity: 'high',
+              messageKey: 'slippage_modifiable',
             });
           }
 
@@ -383,6 +426,7 @@ export async function scanToken(address: string): Promise<SafetyReport> {
             findings.push({
               message: 'Token transfers can be paused by owner',
               severity: 'medium',
+              messageKey: 'transfer_pausable',
             });
           }
 
@@ -391,6 +435,7 @@ export async function scanToken(address: string): Promise<SafetyReport> {
               message: 'Contract is a proxy — logic can be changed',
               severity: 'medium',
               scoreOverride: 15,
+              messageKey: 'proxy_contract',
             });
           }
 
@@ -399,6 +444,7 @@ export async function scanToken(address: string): Promise<SafetyReport> {
               message: 'Contract contains selfdestruct — can be destroyed',
               severity: 'danger',
               scoreOverride: 50,
+              messageKey: 'selfdestruct',
             });
           }
 
@@ -406,6 +452,7 @@ export async function scanToken(address: string): Promise<SafetyReport> {
             findings.push({
               message: 'Token uses a blacklist — your address could be blocked',
               severity: 'medium',
+              messageKey: 'blacklisted',
             });
           }
 
@@ -423,6 +470,7 @@ export async function scanToken(address: string): Promise<SafetyReport> {
               message: 'GoPlus security audit passed — no red flags detected',
               severity: 'info',
               scoreOverride: 0,
+              messageKey: 'goplus_audit_passed',
             });
           }
         }
@@ -435,11 +483,13 @@ export async function scanToken(address: string): Promise<SafetyReport> {
               message: 'Contract source code verified on Sourcify',
               severity: 'info',
               scoreOverride: 0,
+              messageKey: 'sourcify_verified',
             });
           } else {
             findings.push({
               message: 'Contract NOT verified on Sourcify',
               severity: 'low',
+              messageKey: 'sourcify_not_verified',
             });
           }
         }
@@ -452,12 +502,14 @@ export async function scanToken(address: string): Promise<SafetyReport> {
         message: 'DexScreener API request timed out — unable to verify token safety',
         severity: 'medium',
         scoreOverride: 35,
+        messageKey: 'dexscreener_timeout',
       });
     } else {
       findings.push({
         message: 'Could not fetch token data — external API unavailable',
         severity: 'medium',
         scoreOverride: 35,
+        messageKey: 'api_unavailable',
       });
     }
     recommendations.push('Manually verify this token on DexScreener or a block explorer');

@@ -145,7 +145,7 @@ describe('ReportCard', () => {
       });
 
       // Should show count in title
-      expect(screen.getByText(/checks performed \(1\/2 passed\)/i)).toBeDefined();
+      expect(screen.getByText(/checks performed \(1\/2\)/i)).toBeDefined();
 
       // Content collapsed initially
       expect(screen.queryByText('HTTPS check')).toBeNull();
@@ -344,7 +344,7 @@ describe('ReportCard', () => {
       expect(screen.queryByText(/what does this score mean/i)).toBeNull();
 
       // Click the ? button
-      fireEvent.click(screen.getByLabelText('What does this score mean?'));
+      fireEvent.click(screen.getByLabelText('Why this score?'));
       expect(screen.getByText(/0-30/)).toBeDefined();
       expect(screen.getByText(/31-60/)).toBeDefined();
       expect(screen.getByText(/61-100/)).toBeDefined();

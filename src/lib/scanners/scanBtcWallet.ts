@@ -24,6 +24,8 @@ export async function scanBtcWallet(address: string): Promise<SafetyReport> {
     findings.push({
       message: `This address is flagged as: ${blocklistMatch.label} (source: ${blocklistMatch.source})`,
       severity: 'danger',
+      messageKey: 'blocklist_flagged',
+      messageParams: { label: blocklistMatch.label, source: blocklistMatch.source },
     });
     metadata.isFlagged = true;
   }
@@ -32,13 +34,15 @@ export async function scanBtcWallet(address: string): Promise<SafetyReport> {
   const isValid = isBitcoinAddress(trimmed);
 
   if (!isValid) {
-    findings.push({ message: 'Invalid Bitcoin address format', severity: 'high' });
+    findings.push({ message: 'Invalid Bitcoin address format', severity: 'high', messageKey: 'btc_invalid' });
   } else {
     const addrType = getBtcAddressType(trimmed);
     findings.push({
       message: `Valid ${addrType} Bitcoin address`,
       severity: 'info',
       scoreOverride: 0,
+      messageKey: 'btc_valid',
+      messageParams: { type: addrType },
     });
 
     // Explorer links

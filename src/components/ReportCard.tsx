@@ -1,7 +1,9 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { SafetyReport, TokenMetadata, UrlMetadata, TxMetadata, WalletMetadata, SolanaMetadata, EnsMetadata, NftMetadata, CheckItem } from '@/types';
+import { getRecommendationKeyWithParams } from '@/lib/i18n/recommendationKeys';
 import RiskScore from './RiskScore';
 import RiskBadge from './RiskBadge';
 
@@ -11,18 +13,6 @@ interface ReportCardProps {
   onNewScan: () => void;
 }
 
-const inputTypeLabels: Record<string, string> = {
-  url: 'Website URL',
-  token: 'Token Contract',
-  txHash: 'Transaction Hash',
-  wallet: 'Wallet Address',
-  btcWallet: 'Bitcoin Address',
-  solanaToken: 'Solana Token',
-  ens: 'ENS Name',
-  nft: 'NFT Contract',
-  invalidAddress: 'Invalid Address',
-  unknown: 'Unknown Input',
-};
 
 const severityColors: Record<string, string> = {
   info: 'text-gray-400',
@@ -85,6 +75,7 @@ function shortenValue(value: string, type: string): string {
 }
 
 function CopyButton({ text }: { text: string }) {
+  const tc = useTranslations('common');
   const [copied, setCopied] = useState(false);
 
   const handleCopy = () => {
@@ -102,7 +93,7 @@ function CopyButton({ text }: { text: string }) {
     <button
       onClick={handleCopy}
       className="ml-2 p-1 rounded-md hover:bg-gray-800 transition-colors group"
-      title="Copy to clipboard"
+      title={tc('copyToClipboard')}
     >
       {copied ? (
         <svg className="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -145,33 +136,34 @@ function ExternalLink({ href, children }: { href: string; children: React.ReactN
 }
 
 function TokenMetadataCard({ metadata }: { metadata: TokenMetadata }) {
+  const tm = useTranslations('report.metadata');
   return (
     <div className="space-y-3">
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
         {metadata.name && (
-          <MetadataCell label="Token" value={`${metadata.name} (${metadata.symbol})`} />
+          <MetadataCell label={tm('token')} value={`${metadata.name} (${metadata.symbol})`} />
         )}
         {metadata.priceUsd && (
-          <MetadataCell label="Price" value={`$${metadata.priceUsd}`} />
+          <MetadataCell label={tm('price')} value={`$${metadata.priceUsd}`} />
         )}
         {metadata.chain && (
-          <MetadataCell label="Chain" value={metadata.chain} />
+          <MetadataCell label={tm('chain')} value={metadata.chain} />
         )}
         {metadata.dex && (
-          <MetadataCell label="DEX" value={metadata.dex} />
+          <MetadataCell label={tm('dex')} value={metadata.dex} />
         )}
         {metadata.liquidityUsd !== undefined && (
-          <MetadataCell label="Liquidity" value={`$${metadata.liquidityUsd.toLocaleString()}`} />
+          <MetadataCell label={tm('liquidity')} value={`$${metadata.liquidityUsd.toLocaleString()}`} />
         )}
         {metadata.fdv !== undefined && (
-          <MetadataCell label="FDV" value={`$${metadata.fdv.toLocaleString()}`} />
+          <MetadataCell label={tm('fdv')} value={`$${metadata.fdv.toLocaleString()}`} />
         )}
         {metadata.volume24h !== undefined && (
-          <MetadataCell label="24h Volume" value={`$${metadata.volume24h.toLocaleString()}`} />
+          <MetadataCell label={tm('volume24h')} value={`$${metadata.volume24h.toLocaleString()}`} />
         )}
         {metadata.priceChange24h !== undefined && (
           <MetadataCell
-            label="24h Change"
+            label={tm('change24h')}
             value={
               <span className={metadata.priceChange24h >= 0 ? 'text-emerald-400' : 'text-red-400'}>
                 {metadata.priceChange24h >= 0 ? '+' : ''}{metadata.priceChange24h.toFixed(2)}%
@@ -180,42 +172,43 @@ function TokenMetadataCard({ metadata }: { metadata: TokenMetadata }) {
           />
         )}
         {metadata.pairAge && (
-          <MetadataCell label="Pair Age" value={metadata.pairAge} />
+          <MetadataCell label={tm('pairAge')} value={metadata.pairAge} />
         )}
       </div>
       {metadata.dexscreenerUrl && (
-        <ExternalLink href={metadata.dexscreenerUrl}>View on DexScreener</ExternalLink>
+        <ExternalLink href={metadata.dexscreenerUrl}>{tm('viewOnDexScreener')}</ExternalLink>
       )}
     </div>
   );
 }
 
 function SolanaMetadataCard({ metadata }: { metadata: SolanaMetadata }) {
+  const tm = useTranslations('report.metadata');
   return (
     <div className="space-y-3">
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
         {metadata.name && (
-          <MetadataCell label="Token" value={`${metadata.name} (${metadata.symbol})`} />
+          <MetadataCell label={tm('token')} value={`${metadata.name} (${metadata.symbol})`} />
         )}
         {metadata.priceUsd && (
-          <MetadataCell label="Price" value={`$${metadata.priceUsd}`} />
+          <MetadataCell label={tm('price')} value={`$${metadata.priceUsd}`} />
         )}
-        <MetadataCell label="Chain" value="Solana" />
+        <MetadataCell label={tm('chain')} value="Solana" />
         {metadata.dex && (
-          <MetadataCell label="DEX" value={metadata.dex} />
+          <MetadataCell label={tm('dex')} value={metadata.dex} />
         )}
         {metadata.liquidityUsd !== undefined && (
-          <MetadataCell label="Liquidity" value={`$${metadata.liquidityUsd.toLocaleString()}`} />
+          <MetadataCell label={tm('liquidity')} value={`$${metadata.liquidityUsd.toLocaleString()}`} />
         )}
         {metadata.fdv !== undefined && (
-          <MetadataCell label="FDV" value={`$${metadata.fdv.toLocaleString()}`} />
+          <MetadataCell label={tm('fdv')} value={`$${metadata.fdv.toLocaleString()}`} />
         )}
         {metadata.volume24h !== undefined && (
-          <MetadataCell label="24h Volume" value={`$${metadata.volume24h.toLocaleString()}`} />
+          <MetadataCell label={tm('volume24h')} value={`$${metadata.volume24h.toLocaleString()}`} />
         )}
         {metadata.priceChange24h !== undefined && (
           <MetadataCell
-            label="24h Change"
+            label={tm('change24h')}
             value={
               <span className={metadata.priceChange24h >= 0 ? 'text-emerald-400' : 'text-red-400'}>
                 {metadata.priceChange24h >= 0 ? '+' : ''}{metadata.priceChange24h.toFixed(2)}%
@@ -224,15 +217,15 @@ function SolanaMetadataCard({ metadata }: { metadata: SolanaMetadata }) {
           />
         )}
         {metadata.pairAge && (
-          <MetadataCell label="Pair Age" value={metadata.pairAge} />
+          <MetadataCell label={tm('pairAge')} value={metadata.pairAge} />
         )}
       </div>
       <div className="flex flex-wrap gap-2">
         {metadata.dexscreenerUrl && (
-          <ExternalLink href={metadata.dexscreenerUrl}>View on DexScreener</ExternalLink>
+          <ExternalLink href={metadata.dexscreenerUrl}>{tm('viewOnDexScreener')}</ExternalLink>
         )}
         {metadata.mintAddress && (
-          <ExternalLink href={`https://solscan.io/token/${metadata.mintAddress}`}>View on Solscan</ExternalLink>
+          <ExternalLink href={`https://solscan.io/token/${metadata.mintAddress}`}>{tm('viewOnSolscan')}</ExternalLink>
         )}
       </div>
     </div>
@@ -240,11 +233,13 @@ function SolanaMetadataCard({ metadata }: { metadata: SolanaMetadata }) {
 }
 
 function UrlMetadataCard({ metadata }: { metadata: UrlMetadata }) {
+  const tm = useTranslations('report.metadata');
+  const tc = useTranslations('common');
   return (
     <div className="grid grid-cols-2 gap-2.5">
       {metadata.hostname && (
         <MetadataCell
-          label="Host"
+          label={tm('host')}
           value={
             <span className="break-all">
               <span className="text-gray-500">{metadata.protocol}://</span>{metadata.hostname}
@@ -254,16 +249,16 @@ function UrlMetadataCard({ metadata }: { metadata: UrlMetadata }) {
         />
       )}
       <MetadataCell
-        label="HTTPS"
+        label={tm('https')}
         value={
           <span className={metadata.isHttps ? 'text-emerald-400' : 'text-red-400'}>
-            {metadata.isHttps ? 'Yes' : 'No'}
+            {metadata.isHttps ? tc('yes') : tc('no')}
           </span>
         }
       />
       {metadata.urlReachable !== undefined && (
         <MetadataCell
-          label="Reachable"
+          label={tm('reachable')}
           value={
             <span className={
               metadata.urlReachable
@@ -271,19 +266,19 @@ function UrlMetadataCard({ metadata }: { metadata: UrlMetadata }) {
                 : 'text-red-400'
             }>
               {metadata.urlReachable
-                ? (metadata.statusCode ? `Yes (${metadata.statusCode})` : 'Yes')
-                : (metadata.errorType === 'timeout' ? 'No (timeout)'
-                  : metadata.errorType === 'dns' ? 'No (DNS failed)'
-                  : 'No')}
+                ? (metadata.statusCode ? `${tc('yes')} (${metadata.statusCode})` : tc('yes'))
+                : (metadata.errorType === 'timeout' ? `${tc('no')} (timeout)`
+                  : metadata.errorType === 'dns' ? `${tc('no')} (DNS failed)`
+                  : tc('no'))}
             </span>
           }
         />
       )}
       {metadata.redirectCount !== undefined && metadata.redirectCount > 0 && (
-        <MetadataCell label="Redirects" value={<span className="text-yellow-400">{metadata.redirectCount}</span>} />
+        <MetadataCell label={tm('redirects')} value={<span className="text-yellow-400">{metadata.redirectCount}</span>} />
       )}
       {metadata.finalUrl && (
-        <MetadataCell label="Redirects To" value={<span className="break-all">{metadata.finalUrl}</span>} className="col-span-2" />
+        <MetadataCell label={tm('redirectsTo')} value={<span className="break-all">{metadata.finalUrl}</span>} className="col-span-2" />
       )}
     </div>
   );
@@ -308,6 +303,7 @@ const chainToExplorer: Record<string, string> = {
 };
 
 function TxMetadataCard({ metadata, hash }: { metadata: TxMetadata; hash: string }) {
+  const tm = useTranslations('report.metadata');
   const explorers = [
     { name: 'Etherscan', url: `https://etherscan.io/tx/${hash}` },
     { name: 'BscScan', url: `https://bscscan.com/tx/${hash}` },
@@ -326,7 +322,7 @@ function TxMetadataCard({ metadata, hash }: { metadata: TxMetadata; hash: string
     <div className="space-y-3">
       {metadata.chain && (
         <MetadataCell
-          label="Chain"
+          label={tm('chain')}
           value={
             <span className="inline-flex items-center gap-1.5">
               {metadata.detectedChain && (
@@ -354,7 +350,7 @@ function TxMetadataCard({ metadata, hash }: { metadata: TxMetadata; hash: string
           >
             {explorer.name}
             {explorer.name === detectedExplorer && (
-              <span className="text-[10px] text-blue-400/70 font-normal ml-0.5">Detected</span>
+              <span className="text-[10px] text-blue-400/70 font-normal ml-0.5">{tm('detected')}</span>
             )}
             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
@@ -367,21 +363,22 @@ function TxMetadataCard({ metadata, hash }: { metadata: TxMetadata; hash: string
 }
 
 function EnsMetadataCard({ metadata }: { metadata: EnsMetadata }) {
+  const tm = useTranslations('report.metadata');
   return (
     <div className="space-y-3">
       <div className="grid grid-cols-2 gap-2.5">
-        <MetadataCell label="ENS Name" value={metadata.ensName} />
+        <MetadataCell label={tm('ensName')} value={metadata.ensName} />
         <MetadataCell
-          label="Resolution"
+          label={tm('resolution')}
           value={
             <span className={metadata.resolutionStatus === 'resolved' ? 'text-emerald-400' : 'text-red-400'}>
-              {metadata.resolutionStatus === 'resolved' ? 'Resolved' : 'Failed'}
+              {metadata.resolutionStatus === 'resolved' ? tm('resolved') : tm('failed')}
             </span>
           }
         />
         {metadata.resolvedAddress && (
           <MetadataCell
-            label="Resolved Address"
+            label={tm('resolvedAddress')}
             value={
               <span className="font-mono text-xs break-all">
                 {metadata.resolvedAddress}
@@ -392,7 +389,7 @@ function EnsMetadataCard({ metadata }: { metadata: EnsMetadata }) {
         )}
         {metadata.resolutionError && (
           <MetadataCell
-            label="Error"
+            label={tm('error')}
             value={<span className="text-red-400">{metadata.resolutionError}</span>}
             className="col-span-2"
           />
@@ -410,43 +407,45 @@ function EnsMetadataCard({ metadata }: { metadata: EnsMetadata }) {
 }
 
 function NftMetadataCard({ metadata }: { metadata: NftMetadata }) {
+  const tm = useTranslations('report.metadata');
+  const tc = useTranslations('common');
   return (
     <div className="space-y-3">
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
         {metadata.name && (
-          <MetadataCell label="Collection" value={`${metadata.name}${metadata.symbol ? ` (${metadata.symbol})` : ''}`} />
+          <MetadataCell label={tm('collection')} value={`${metadata.name}${metadata.symbol ? ` (${metadata.symbol})` : ''}`} />
         )}
         {metadata.tokenStandard && (
-          <MetadataCell label="Standard" value={metadata.tokenStandard} />
+          <MetadataCell label={tm('standard')} value={metadata.tokenStandard} />
         )}
         {metadata.chain && (
-          <MetadataCell label="Chain" value={metadata.chain} />
+          <MetadataCell label={tm('chain')} value={metadata.chain} />
         )}
         {metadata.isOpenSource !== undefined && (
           <MetadataCell
-            label="Open Source"
-            value={<span className={metadata.isOpenSource ? 'text-emerald-400' : 'text-red-400'}>{metadata.isOpenSource ? 'Yes' : 'No'}</span>}
+            label={tm('openSource')}
+            value={<span className={metadata.isOpenSource ? 'text-emerald-400' : 'text-red-400'}>{metadata.isOpenSource ? tc('yes') : tc('no')}</span>}
           />
         )}
         {metadata.onTrustList !== undefined && (
           <MetadataCell
-            label="Trust List"
-            value={<span className={metadata.onTrustList ? 'text-emerald-400' : 'text-gray-500'}>{metadata.onTrustList ? 'Yes' : 'No'}</span>}
+            label={tm('trustList')}
+            value={<span className={metadata.onTrustList ? 'text-emerald-400' : 'text-gray-500'}>{metadata.onTrustList ? tc('yes') : tc('no')}</span>}
           />
         )}
       </div>
       {metadata.description && (
         <div className="bg-gray-800/50 border border-gray-700/50 rounded-xl p-3.5">
-          <p className="text-[11px] text-gray-500 uppercase tracking-wider mb-1.5">Description</p>
+          <p className="text-[11px] text-gray-500 uppercase tracking-wider mb-1.5">{tm('description')}</p>
           <p className="text-sm text-gray-300 leading-relaxed">{metadata.description}</p>
         </div>
       )}
       <div className="flex flex-wrap gap-2">
         {metadata.explorerUrl && (
-          <ExternalLink href={metadata.explorerUrl}>View on Etherscan</ExternalLink>
+          <ExternalLink href={metadata.explorerUrl}>{tm('viewOnEtherscan')}</ExternalLink>
         )}
         {metadata.websiteUrl && (
-          <ExternalLink href={metadata.websiteUrl}>Website</ExternalLink>
+          <ExternalLink href={metadata.websiteUrl}>{tm('website')}</ExternalLink>
         )}
         {metadata.discordUrl && (
           <ExternalLink href={metadata.discordUrl}>Discord</ExternalLink>
@@ -508,6 +507,9 @@ function Collapsible({ title, children, open, onToggle, id }: { title: string; c
 /* ── Main ReportCard ────────────────────────────────────── */
 
 export default function ReportCard({ report, onCopyReport, onNewScan }: ReportCardProps) {
+  const t = useTranslations('report');
+  const tFindings = useTranslations('findings');
+  const tRecs = useTranslations('recommendations');
   const [breakdownOpen, setBreakdownOpen] = useState(false);
   const [showAllBreakdown, setShowAllBreakdown] = useState(false);
   const [checksOpen, setChecksOpen] = useState(false);
@@ -532,8 +534,8 @@ export default function ReportCard({ report, onCopyReport, onNewScan }: ReportCa
             <button
               onClick={() => setExplainerOpen(!explainerOpen)}
               className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-gray-700 hover:bg-gray-600 flex items-center justify-center text-gray-500 hover:text-white transition-colors"
-              title="What does this score mean?"
-              aria-label="What does this score mean?"
+              title={t('whyThisScore')}
+              aria-label={t('whyThisScore')}
             >
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -544,11 +546,11 @@ export default function ReportCard({ report, onCopyReport, onNewScan }: ReportCa
             <div className="flex items-center gap-2.5 justify-center sm:justify-start mb-3">
               <RiskBadge level={report.riskLevel} size="lg" />
               <span className={`text-[11px] px-2.5 py-0.5 rounded-full font-semibold border ${confidenceColors[report.confidence]}`}>
-                {report.confidence} confidence
+                {t(`confidence.${report.confidence}`)}
               </span>
             </div>
             <p className="text-gray-500 text-xs uppercase tracking-wider mb-1.5">
-              {inputTypeLabels[report.inputType]}
+              {t(`inputTypeLabels.${report.inputType}`)}
             </p>
             <div className="flex items-center justify-center sm:justify-start min-w-0">
               <p className="text-gray-300 text-sm break-all font-mono tracking-tight truncate" title={report.inputValue}>
@@ -562,23 +564,23 @@ export default function ReportCard({ report, onCopyReport, onNewScan }: ReportCa
 
       {/* ── Score Explainer ────────────────────────────── */}
       {explainerOpen && (
-        <Section title="What does this score mean?">
+        <Section title={t('whyThisScore')}>
           <div className="space-y-3">
             {[
-              { range: '0-30', level: 'SAFE', color: 'text-emerald-400', desc: 'Low-risk signals. No guarantee of safety.' },
-              { range: '31-60', level: 'SUSPICIOUS', color: 'text-yellow-400', desc: 'Potential scam or manipulation signals detected.' },
-              { range: '61-100', level: 'DANGEROUS', color: 'text-red-400', desc: 'High-risk signals detected. Avoid interaction.' },
+              { range: '0-30', level: 'SAFE' as const, color: 'text-emerald-400', descKey: 'safe' as const },
+              { range: '31-60', level: 'SUSPICIOUS' as const, color: 'text-yellow-400', descKey: 'suspicious' as const },
+              { range: '61-100', level: 'DANGEROUS' as const, color: 'text-red-400', descKey: 'dangerous' as const },
             ].map((item) => (
               <div key={item.level} className="flex items-start gap-3 py-1">
                 <span className={`${item.color} font-mono text-sm font-bold whitespace-nowrap w-12`}>{item.range}</span>
                 <div>
                   <span className={`${item.color} font-semibold text-sm`}>{item.level}</span>
-                  <p className="text-gray-500 text-xs mt-0.5">{item.desc}</p>
+                  <p className="text-gray-500 text-xs mt-0.5">{t(`scoreExplainer.${item.descKey}`)}</p>
                 </div>
               </div>
             ))}
           </div>
-          <p className="text-gray-600 text-[11px] mt-4 pt-3 border-t border-gray-800">Scores are heuristic-based and not financial advice.</p>
+          <p className="text-gray-600 text-[11px] mt-4 pt-3 border-t border-gray-800">{t('scoreExplainer.heuristicNote')}</p>
         </Section>
       )}
 
@@ -589,7 +591,7 @@ export default function ReportCard({ report, onCopyReport, onNewScan }: ReportCa
             <svg className="w-5 h-5 text-red-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
             </svg>
-            <p className="text-red-400 text-sm font-semibold">Invalid address — checksum failed</p>
+            <p className="text-red-400 text-sm font-semibold">{t('invalidAddressWarning')}</p>
           </div>
         </div>
       )}
@@ -633,7 +635,7 @@ export default function ReportCard({ report, onCopyReport, onNewScan }: ReportCa
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
             </svg>
             <div>
-              <p className="text-[11px] text-gray-500 font-semibold uppercase tracking-widest mb-1.5">Recommended Next Step</p>
+              <p className="text-[11px] text-gray-500 font-semibold uppercase tracking-widest mb-1.5">{t('recommendedNextStep')}</p>
               <p className="text-gray-200 text-sm leading-relaxed">{report.nextStep}</p>
             </div>
           </div>
@@ -642,7 +644,7 @@ export default function ReportCard({ report, onCopyReport, onNewScan }: ReportCa
 
       {/* ── Metadata Details ───────────────────────────── */}
       {report.metadata && (
-        <Section title="Details">
+        <Section title={t('details')}>
           {report.inputType === 'token' && <TokenMetadataCard metadata={report.metadata as TokenMetadata} />}
           {report.inputType === 'solanaToken' && <SolanaMetadataCard metadata={report.metadata as SolanaMetadata} />}
           {report.inputType === 'url' && <UrlMetadataCard metadata={report.metadata as UrlMetadata} />}
@@ -654,7 +656,7 @@ export default function ReportCard({ report, onCopyReport, onNewScan }: ReportCa
       )}
 
       {/* ── Findings ───────────────────────────────────── */}
-      <Section title="Findings">
+      <Section title={t('findings')}>
         {report.findings.length === 0 ? (
           <div className="flex items-center gap-2.5 py-1">
             <span className="flex-shrink-0 text-emerald-400">
@@ -662,7 +664,7 @@ export default function ReportCard({ report, onCopyReport, onNewScan }: ReportCa
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
               </svg>
             </span>
-            <span className="text-emerald-400 text-sm font-medium">All checks passed — no issues detected.</span>
+            <span className="text-emerald-400 text-sm font-medium">{t('noFindings')}</span>
           </div>
         ) : (
           <ul className="space-y-2">
@@ -671,7 +673,9 @@ export default function ReportCard({ report, onCopyReport, onNewScan }: ReportCa
                 <span className={`mt-0.5 flex-shrink-0 ${severityColors[finding.severity]}`}>
                   {severityIcons[finding.severity]}
                 </span>
-                <span className="text-gray-200 text-sm leading-relaxed">{finding.message}</span>
+                <span className="text-gray-200 text-sm leading-relaxed">
+                  {finding.messageKey ? tFindings(finding.messageKey, finding.messageParams) : finding.message}
+                </span>
               </li>
             ))}
           </ul>
@@ -681,7 +685,7 @@ export default function ReportCard({ report, onCopyReport, onNewScan }: ReportCa
       {/* ── Checks Performed ───────────────────────────── */}
       {report.checksPerformed && report.checksPerformed.length > 0 && (
         <Collapsible
-          title={`Checks Performed (${report.checksPerformed.filter((c: CheckItem) => c.passed).length}/${report.checksPerformed.length} passed)`}
+          title={`${t('checksPerformed')} (${report.checksPerformed.filter((c: CheckItem) => c.passed).length}/${report.checksPerformed.length})`}
           open={checksOpen}
           onToggle={() => setChecksOpen(!checksOpen)}
           id="checks-performed"
@@ -711,7 +715,7 @@ export default function ReportCard({ report, onCopyReport, onNewScan }: ReportCa
       {/* ── Score Breakdown ────────────────────────────── */}
       {report.scoreBreakdown && report.scoreBreakdown.length > 0 && (
         <Collapsible
-          title="Why this score?"
+          title={t('whyThisScore')}
           open={breakdownOpen}
           onToggle={() => setBreakdownOpen(!breakdownOpen)}
           id="score-breakdown"
@@ -737,30 +741,35 @@ export default function ReportCard({ report, onCopyReport, onNewScan }: ReportCa
                     onClick={() => setShowAllBreakdown(true)}
                     className="text-xs text-gray-600 hover:text-gray-400 transition-colors mt-1"
                   >
-                    + {passed.length} passed check{passed.length !== 1 ? 's' : ''} with no score impact
+                    {t('passedChecks', { count: passed.length })}
                   </button>
                 )}
               </>
             );
           })()}
           <div className="flex items-center justify-between text-sm pt-3 mt-1 border-t border-gray-700">
-            <span className="text-white font-medium">Total Risk Score</span>
+            <span className="text-white font-medium">{t('totalRiskScore')}</span>
             <span className="font-mono font-bold text-white">{report.riskScore}/100</span>
           </div>
         </Collapsible>
       )}
 
       {/* ── Recommendations ────────────────────────────── */}
-      <Section title="Recommendations">
+      <Section title={t('recommendations')}>
         <ul className="space-y-2.5">
-          {report.recommendations.map((rec, index) => (
-            <li key={index} className="flex items-start gap-2.5">
-              <svg className="w-4 h-4 mt-0.5 text-blue-400/70 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <span className="text-gray-300 text-sm leading-relaxed break-words">{rec}</span>
-            </li>
-          ))}
+          {report.recommendations.map((rec, index) => {
+            const recLookup = getRecommendationKeyWithParams(rec);
+            return (
+              <li key={index} className="flex items-start gap-2.5">
+                <svg className="w-4 h-4 mt-0.5 text-blue-400/70 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span className="text-gray-300 text-sm leading-relaxed break-words">
+                  {recLookup ? tRecs(recLookup.key, recLookup.params) : rec}
+                </span>
+              </li>
+            );
+          })}
         </ul>
       </Section>
 
@@ -783,7 +792,7 @@ export default function ReportCard({ report, onCopyReport, onNewScan }: ReportCa
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
             </svg>
           )}
-          {copiedReport ? 'Copied!' : 'Copy Report'}
+          {copiedReport ? t('copied') : t('copyReport')}
         </button>
         <button
           onClick={async () => {
@@ -820,7 +829,7 @@ export default function ReportCard({ report, onCopyReport, onNewScan }: ReportCa
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
             </svg>
           )}
-          {copiedShare ? 'Copied!' : 'Share Link'}
+          {copiedShare ? t('copied') : t('shareLink')}
         </button>
         <button
           onClick={onNewScan}
@@ -829,7 +838,7 @@ export default function ReportCard({ report, onCopyReport, onNewScan }: ReportCa
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
-          New Scan
+          {t('newScan')}
         </button>
       </div>
     </div>

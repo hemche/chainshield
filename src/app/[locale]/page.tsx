@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useSyncExternalStore } from 'react';
+import { useTranslations } from 'next-intl';
 import { SafetyReport } from '@/types';
 import ScanForm from '@/components/ScanForm';
 import ReportCard from '@/components/ReportCard';
@@ -81,6 +82,8 @@ function LoadingSkeleton() {
 export default function Home() {
   const [report, setReport] = useState<SafetyReport | null>(null);
   const [loading, setLoading] = useState(false);
+  const t = useTranslations('home');
+  const tc = useTranslations('common');
 
   const history = useSyncExternalStore(subscribeHistory, getHistorySnapshot, getHistoryServerSnapshot);
 
@@ -134,11 +137,11 @@ export default function Home() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
               </svg>
               <h1 className="text-3xl sm:text-4xl font-bold text-white tracking-tight">
-                ChainShield
+                {tc('appName')}
               </h1>
             </div>
             <p className="text-gray-400 text-base sm:text-lg max-w-md mx-auto leading-relaxed">
-              Paste any crypto URL, contract address, transaction hash, or wallet address to scan for risk signals.
+              {t('tagline')}
             </p>
           </div>
         )}
@@ -151,7 +154,7 @@ export default function Home() {
             {/* Recent scans */}
             {history.length > 0 && (
               <div className="mt-8 flex flex-wrap items-center justify-center gap-2">
-                <span className="text-xs text-gray-600 mr-1">Recent:</span>
+                <span className="text-xs text-gray-600 mr-1">{t('recentScans')}</span>
                 {history.map((h) => (
                   <button
                     key={h}

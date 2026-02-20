@@ -42,6 +42,20 @@ All APIs are free, public, and require no authentication:
 
 All API calls are non-blocking. If any API fails, the scanner returns a valid report with reduced confidence (graceful degradation).
 
+## Languages
+
+ChainShield supports three languages with automatic locale detection via `Accept-Language` header:
+
+| Language | Locale | URL Prefix |
+|----------|--------|------------|
+| English | `en` | `/en/` |
+| Spanish | `es` | `/es/` |
+| Chinese Simplified | `zh` | `/zh/` |
+
+Switch languages using the language toggle in the footer. All scanner findings, recommendations, and UI strings are fully translated (380 keys per locale).
+
+**Adding a new language:** Copy `src/messages/en.json` to `src/messages/{locale}.json`, translate all values, and add the locale code to `src/i18n/config.ts`.
+
 ## Privacy
 
 - No wallet connection required
@@ -72,22 +86,26 @@ npm run test:watch # watch mode
 ```
 src/
   app/
-    api/scan/       — POST endpoint with rate limiting
-    api/og/         — Dynamic OG image generation (edge runtime)
-    about/          — About page
-    privacy/        — Privacy policy
-    report/         — Shareable report page
-    not-found.tsx   — Custom 404
-    sitemap.ts      — Dynamic sitemap
-  components/       — React components (ScanForm, ReportCard, RiskScore, ErrorBoundary, etc.)
-  config/rules.ts   — All thresholds, TLD lists, explorer configs
-  data/blocklist.ts — Static scam address blocklist (56 entries)
+    [locale]/         — Locale-prefixed pages (/en/, /es/, /zh/)
+      about/          — About page
+      privacy/        — Privacy policy
+      report/         — Shareable report page
+      not-found.tsx   — Custom 404
+    api/scan/         — POST endpoint with rate limiting
+    api/og/           — Dynamic OG image generation (edge runtime)
+    sitemap.ts        — Dynamic sitemap
+  components/         — React components (ScanForm, ReportCard, RiskScore, LanguageSwitcher, etc.)
+  config/rules.ts     — All thresholds, TLD lists, explorer configs
+  data/blocklist.ts   — Static scam address blocklist (56 entries)
+  i18n/               — next-intl config, routing, navigation helpers
+  messages/           — Translation files (en.json, es.json, zh.json)
   lib/
-    apis/           — GoPlus, Sourcify, and government scam database API clients with caching
-    riskScoring/    — Score calculation + risk level determination
-    scanners/       — URL, Token, Solana, TxHash, Wallet, BTC scanners + blocklist checker
-    validation/     — EVM + BTC address checksum validation
-  types/index.ts    — All TypeScript interfaces
+    apis/             — GoPlus, Sourcify, government scam database API clients with caching
+    i18n/             — Recommendation key lookup map
+    riskScoring/      — Score calculation + risk level determination
+    scanners/         — URL, Token, Solana, NFT, ENS, TxHash, Wallet, BTC scanners + blocklist
+    validation/       — EVM + BTC address checksum validation
+  types/index.ts      — All TypeScript interfaces
 ```
 
 ## Tech Stack
@@ -96,6 +114,7 @@ src/
 - TypeScript (strict mode)
 - Tailwind CSS v4
 - [Vitest](https://vitest.dev) 2.x
+- [next-intl](https://next-intl.dev) — Internationalization (EN/ES/ZH)
 - [ethers.js](https://docs.ethers.org) — EVM address validation
 - [bitcoinjs-lib](https://github.com/bitcoinjs/bitcoinjs-lib) — BTC address validation
 
@@ -118,7 +137,7 @@ Upcoming features and improvements:
 - **Telegram / Discord bot** — Scan links shared in group chats automatically
 - **Historical risk tracking** — Show how a token's risk score changes over time
 - **Community threat feed** — Crowdsourced scam reports integrated into scoring
-- **Multi-language support** — Spanish and Chinese to cover high-risk populations
+- **Multi-language support** ✅ — English, Spanish, and Chinese Simplified with automatic locale detection
 
 ## Disclaimer
 

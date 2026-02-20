@@ -54,18 +54,20 @@ export async function scanTxHash(hash: string): Promise<SafetyReport> {
   // --- Validation checks ---
 
   if (!trimmed.startsWith('0x')) {
-    findings.push({ message: 'Transaction hash should start with 0x', severity: 'high' });
+    findings.push({ message: 'Transaction hash should start with 0x', severity: 'high', messageKey: 'tx_no_0x' });
   }
 
   if (trimmed.length !== 66) {
     findings.push({
       message: `Invalid hash length: ${trimmed.length} characters (expected 66)`,
       severity: 'high',
+      messageKey: 'tx_invalid_length',
+      messageParams: { length: trimmed.length },
     });
   }
 
   if (!/^0x[a-fA-F0-9]{64}$/.test(trimmed)) {
-    findings.push({ message: 'Transaction hash contains invalid characters', severity: 'high' });
+    findings.push({ message: 'Transaction hash contains invalid characters', severity: 'high', messageKey: 'tx_invalid_chars' });
   }
 
   // --- Valid hash path ---
@@ -76,6 +78,7 @@ export async function scanTxHash(hash: string): Promise<SafetyReport> {
     findings.push({
       message: 'Transaction hash format is valid',
       severity: 'low',
+      messageKey: 'tx_valid',
     });
 
     // Auto chain detection via explorer HEAD requests

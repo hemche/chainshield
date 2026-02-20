@@ -72,6 +72,7 @@ export async function scanSolanaToken(address: string): Promise<SafetyReport> {
       findings.push({
         message: 'DexScreener returned no liquidity pairs — token may be unlisted or a scam',
         severity: 'danger',
+        messageKey: 'no_liquidity_pairs',
       });
       recommendations.push('Do not interact with this token unless verified on a Solana explorer');
       recommendations.push('Verify the mint address on solscan.io or solana.fm');
@@ -117,12 +118,16 @@ export async function scanSolanaToken(address: string): Promise<SafetyReport> {
               message: `Token pair created ${metadata.pairAge} ago — extremely new`,
               severity: 'danger',
               scoreOverride: 25,
+              messageKey: 'solana_pair_very_new',
+              messageParams: { age: metadata.pairAge },
             });
           } else if (ageDays < TOKEN_THRESHOLDS.pairAgeSuspiciousDays) {
             findings.push({
               message: `Token pair created ${metadata.pairAge} ago — very new`,
               severity: 'medium',
               scoreOverride: 15,
+              messageKey: 'solana_pair_new',
+              messageParams: { age: metadata.pairAge },
             });
           }
         }
@@ -135,6 +140,8 @@ export async function scanSolanaToken(address: string): Promise<SafetyReport> {
             message: `Extremely low liquidity: $${liq.toLocaleString()} USD`,
             severity: 'danger',
             scoreOverride: 50,
+            messageKey: 'solana_low_liquidity',
+            messageParams: { amount: liq.toLocaleString() },
           });
         } else if (liq < TOKEN_THRESHOLDS.liquiditySuspicious) {
           hasLowLiquidity = true;
@@ -142,6 +149,8 @@ export async function scanSolanaToken(address: string): Promise<SafetyReport> {
             message: `Low liquidity: $${liq.toLocaleString()} USD`,
             severity: 'medium',
             scoreOverride: 25,
+            messageKey: 'solana_moderate_liquidity',
+            messageParams: { amount: liq.toLocaleString() },
           });
         }
 
@@ -153,6 +162,8 @@ export async function scanSolanaToken(address: string): Promise<SafetyReport> {
             message: `Very low 24h volume: $${vol.toLocaleString()} USD`,
             severity: 'medium',
             scoreOverride: 15,
+            messageKey: 'solana_low_volume',
+            messageParams: { amount: vol.toLocaleString() },
           });
         } else if (vol < TOKEN_THRESHOLDS.volumeLow) {
           hasVolume = true;
@@ -160,6 +171,8 @@ export async function scanSolanaToken(address: string): Promise<SafetyReport> {
             message: `Low 24h volume: $${vol.toLocaleString()} USD`,
             severity: 'medium',
             scoreOverride: 10,
+            messageKey: 'solana_moderate_volume',
+            messageParams: { amount: vol.toLocaleString() },
           });
         }
 
@@ -173,12 +186,16 @@ export async function scanSolanaToken(address: string): Promise<SafetyReport> {
             findings.push({
               message: `Extreme price pump: +${change.toFixed(1)}% in 24h`,
               severity: 'danger',
+              messageKey: 'solana_extreme_pump',
+              messageParams: { change: change.toFixed(1) },
             });
           } else if (change > TOKEN_THRESHOLDS.priceChangeSuspicious || change < TOKEN_THRESHOLDS.priceDropThreshold) {
             findings.push({
               message: `Large price swing: ${change > 0 ? '+' : ''}${change.toFixed(1)}% in 24h`,
               severity: 'medium',
               scoreOverride: 10,
+              messageKey: 'solana_large_swing',
+              messageParams: { change: `${change > 0 ? '+' : ''}${change.toFixed(1)}` },
             });
           }
 
@@ -196,6 +213,8 @@ export async function scanSolanaToken(address: string): Promise<SafetyReport> {
             message: `High FDV ($${(pair.fdv / 1e6).toFixed(1)}M) with low liquidity ($${liq.toLocaleString()}) — exit liquidity risk`,
             severity: 'medium',
             scoreOverride: 20,
+            messageKey: 'solana_high_fdv',
+            messageParams: { fdv: `${(pair.fdv / 1e6).toFixed(1)}M`, liquidity: liq.toLocaleString() },
           });
         }
 
@@ -204,6 +223,8 @@ export async function scanSolanaToken(address: string): Promise<SafetyReport> {
           findings.push({
             message: `Very low FDV: $${pair.fdv.toLocaleString()}`,
             severity: 'low',
+            messageKey: 'solana_low_fdv',
+            messageParams: { amount: pair.fdv.toLocaleString() },
           });
         }
       }
@@ -213,11 +234,13 @@ export async function scanSolanaToken(address: string): Promise<SafetyReport> {
       findings.push({
         message: 'DexScreener API timed out — could not fetch token data',
         severity: 'medium',
+        messageKey: 'solana_timeout',
       });
     } else {
       findings.push({
         message: 'Failed to fetch token data from DexScreener',
         severity: 'medium',
+        messageKey: 'solana_fetch_failed',
       });
     }
     recommendations.push('Try scanning again — the data source may be temporarily unavailable');

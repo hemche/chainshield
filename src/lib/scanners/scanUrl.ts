@@ -145,7 +145,7 @@ export async function scanUrl(input: string): Promise<SafetyReport> {
     detail: isHttps ? 'Connection is encrypted' : 'Not encrypted',
   });
   if (!isHttps) {
-    findings.push({ message: 'Site does not use HTTPS encryption', severity: 'high' });
+    findings.push({ message: 'Site does not use HTTPS encryption', severity: 'high', messageKey: 'no_https' });
     recommendations.push('Avoid entering any personal information on non-HTTPS sites');
   }
 
@@ -173,6 +173,7 @@ export async function scanUrl(input: string): Promise<SafetyReport> {
       findings.push({
         message: 'Domain contains non-ASCII (unicode) characters — possible homoglyph/punycode attack',
         severity: 'high',
+        messageKey: 'unicode_domain',
       });
       recommendations.push('Homoglyph attacks use lookalike characters to impersonate legitimate sites');
     }
@@ -180,6 +181,7 @@ export async function scanUrl(input: string): Promise<SafetyReport> {
       findings.push({
         message: 'Domain uses punycode encoding (xn--) — may be disguising unicode characters',
         severity: 'high',
+        messageKey: 'punycode_domain',
       });
     }
 
@@ -199,6 +201,8 @@ export async function scanUrl(input: string): Promise<SafetyReport> {
             findings.push({
               message: `Subdomain impersonates "${brand}" — the actual domain is ${registeredDomain}`,
               severity: 'high',
+              messageKey: 'subdomain_spoof',
+              messageParams: { brand, domain: registeredDomain },
             });
             recommendations.push('Check the actual domain name, not just the subdomain — scammers use subdomains to mimic trusted brands');
             break;
@@ -217,7 +221,7 @@ export async function scanUrl(input: string): Promise<SafetyReport> {
     for (const tld of SUSPICIOUS_TLDS) {
       if (domain.endsWith(tld)) {
         hasSuspiciousTld = true;
-        findings.push({ message: `Suspicious domain extension: ${tld}`, severity: 'medium' });
+        findings.push({ message: `Suspicious domain extension: ${tld}`, severity: 'medium', messageKey: 'suspicious_tld', messageParams: { tld } });
         recommendations.push('Be cautious with uncommon domain extensions often used in scams');
         break;
       }
@@ -237,7 +241,7 @@ export async function scanUrl(input: string): Promise<SafetyReport> {
       detail: `${domainWithoutTld.length} characters`,
     });
     if (domainTooLong) {
-      findings.push({ message: 'Unusually long domain name', severity: 'medium' });
+      findings.push({ message: 'Unusually long domain name', severity: 'medium', messageKey: 'long_domain' });
     }
 
     // Check hyphens
@@ -249,7 +253,7 @@ export async function scanUrl(input: string): Promise<SafetyReport> {
       detail: `${hyphenCount} hyphen${hyphenCount !== 1 ? 's' : ''}`,
     });
     if (tooManyHyphens) {
-      findings.push({ message: `Domain contains ${hyphenCount} hyphens — common in phishing URLs`, severity: 'medium' });
+      findings.push({ message: `Domain contains ${hyphenCount} hyphens — common in phishing URLs`, severity: 'medium', messageKey: 'many_hyphens', messageParams: { count: hyphenCount } });
     }
 
     // Check numbers in domain
@@ -261,7 +265,7 @@ export async function scanUrl(input: string): Promise<SafetyReport> {
       detail: `${numberCount} number${numberCount !== 1 ? 's' : ''} in domain`,
     });
     if (tooManyNumbers) {
-      findings.push({ message: 'Domain contains many numbers — common in scam URLs', severity: 'low' });
+      findings.push({ message: 'Domain contains many numbers — common in scam URLs', severity: 'low', messageKey: 'many_numbers' });
     }
 
     // Check for scam keywords
@@ -293,6 +297,8 @@ export async function scanUrl(input: string): Promise<SafetyReport> {
       findings.push({
         message: `URL contains scam-associated keywords: ${foundKeywords.join(', ')}`,
         severity: foundKeywords.length >= 2 ? 'high' : 'medium',
+        messageKey: 'scam_keywords',
+        messageParams: { keywords: foundKeywords.join(', ') },
       });
       recommendations.push('URLs with these keywords are frequently associated with phishing attacks');
     } else if (hasScamKeywords && mildOnlyInPath) {
@@ -300,6 +306,8 @@ export async function scanUrl(input: string): Promise<SafetyReport> {
         message: `URL path contains crypto-related keywords: ${foundKeywords.join(', ')}`,
         severity: 'info',
         scoreOverride: 0,
+        messageKey: 'path_keywords',
+        messageParams: { keywords: foundKeywords.join(', ') },
       });
     }
   }
@@ -327,6 +335,7 @@ export async function scanUrl(input: string): Promise<SafetyReport> {
       message: 'URL points to a private or reserved IP address — blocked for safety.',
       severity: 'danger',
       scoreOverride: 50,
+      messageKey: 'private_ip',
     });
     checks.push({ label: 'URL reachability', passed: false, detail: 'Blocked: private/reserved host' });
   }
@@ -366,6 +375,8 @@ export async function scanUrl(input: string): Promise<SafetyReport> {
             message: `URL redirects to non-HTTP scheme (${resolvedScheme}) — blocked for safety.`,
             severity: 'danger',
             scoreOverride: 50,
+            messageKey: 'redirect_non_http',
+            messageParams: { scheme: resolvedScheme },
           });
           break;
         }
@@ -376,6 +387,7 @@ export async function scanUrl(input: string): Promise<SafetyReport> {
             message: 'URL redirects to a private or reserved IP address — blocked for safety.',
             severity: 'danger',
             scoreOverride: 50,
+            messageKey: 'redirect_private_ip',
           });
           break;
         }
@@ -386,6 +398,7 @@ export async function scanUrl(input: string): Promise<SafetyReport> {
             message: 'URL redirect loop detected — the URL redirects back to a previously visited address.',
             severity: 'medium',
             scoreOverride: 15,
+            messageKey: 'redirect_loop',
           });
           break;
         }
@@ -419,6 +432,7 @@ export async function scanUrl(input: string): Promise<SafetyReport> {
           message: 'URL redirects to a different path on the same domain (common behavior).',
           severity: 'info',
           scoreOverride: 0,
+          messageKey: 'redirect_same_domain',
         });
       } else {
         // Cross-domain redirect — check for suspicious TLD in target
@@ -430,12 +444,15 @@ export async function scanUrl(input: string): Promise<SafetyReport> {
             message: `URL redirects to a different domain with suspicious TLD (${finalHost}) — high phishing risk.`,
             severity: 'danger',
             scoreOverride: 50,
+            messageKey: 'redirect_suspicious_tld',
+            messageParams: { host: finalHost },
           });
         } else {
           findings.push({
             message: 'URL redirects to a different domain — phishing risk.',
             severity: 'danger',
             scoreOverride: 30,
+            messageKey: 'redirect_different_domain',
           });
         }
         recommendations.push('Be cautious with redirecting URLs — verify the final destination');
@@ -447,6 +464,7 @@ export async function scanUrl(input: string): Promise<SafetyReport> {
           message: 'URL performs multiple redirects (may indicate tracking or obfuscation).',
           severity: 'medium',
           scoreOverride: 10,
+          messageKey: 'multiple_redirects',
         });
       }
     }
@@ -458,12 +476,16 @@ export async function scanUrl(input: string): Promise<SafetyReport> {
         message: `URL reachable but blocked access (HTTP ${response.status})`,
         severity: 'info',
         scoreOverride: 5,
+        messageKey: 'blocked_access',
+        messageParams: { status: response.status },
       });
       recommendations.push(`Server returned HTTP ${response.status} — likely bot protection. Try visiting manually in your browser.`);
     } else if (response.status >= 400) {
       findings.push({
         message: `URL returned error status (HTTP ${response.status})`,
         severity: 'medium',
+        messageKey: 'error_status',
+        messageParams: { status: response.status },
       });
     }
 
@@ -486,6 +508,8 @@ export async function scanUrl(input: string): Promise<SafetyReport> {
           : `URL unreachable (timeout after ${timeoutSeconds}s) — cannot verify safety`,
         severity: unreachableSeverity,
         scoreOverride: unreachableOverride,
+        messageKey: isTrusted ? 'timeout_trusted' : 'timeout_untrusted',
+        messageParams: { seconds: timeoutSeconds },
       });
     } else if (error instanceof TypeError) {
       metadata.errorType = 'dns';
@@ -495,6 +519,7 @@ export async function scanUrl(input: string): Promise<SafetyReport> {
           : 'URL unreachable (DNS resolution failed) — domain may not exist',
         severity: unreachableSeverity,
         scoreOverride: unreachableOverride,
+        messageKey: isTrusted ? 'dns_failed_trusted' : 'dns_failed_untrusted',
       });
     } else {
       metadata.errorType = 'unknown';
@@ -504,6 +529,7 @@ export async function scanUrl(input: string): Promise<SafetyReport> {
           : 'URL unreachable (connection error) — cannot verify safety',
         severity: unreachableSeverity,
         scoreOverride: unreachableOverride,
+        messageKey: isTrusted ? 'connection_error_trusted' : 'connection_error_untrusted',
       });
     }
     recommendations.push('Could not verify this URL — exercise extra caution');
@@ -535,6 +561,7 @@ export async function scanUrl(input: string): Promise<SafetyReport> {
         message: 'URL flagged as phishing by GoPlus security database',
         severity: 'danger',
         scoreOverride: 60,
+        messageKey: 'goplus_phishing',
       });
       checks.push({ label: 'Phishing database (GoPlus)', passed: false, detail: 'Flagged as phishing' });
     } else if (goPlusResult.phishing === 0) {
@@ -544,6 +571,7 @@ export async function scanUrl(input: string): Promise<SafetyReport> {
         message: 'Not found in GoPlus phishing database',
         severity: 'info',
         scoreOverride: 0,
+        messageKey: 'goplus_not_phishing',
       });
       checks.push({ label: 'Phishing database (GoPlus)', passed: true, detail: 'Not in phishing database' });
     } else {
@@ -577,6 +605,8 @@ export async function scanUrl(input: string): Promise<SafetyReport> {
       findings.push({
         message: `Listed in ${govResult.source} government scam database${entityInfo}${categoryInfo}`,
         severity: 'high',
+        messageKey: 'gov_flagged',
+        messageParams: { source: govResult.source || '', entityInfo, categoryInfo },
       });
       checks.push({
         label: 'Government databases (ASIC/AMF)',
@@ -589,6 +619,7 @@ export async function scanUrl(input: string): Promise<SafetyReport> {
         message: 'Not found in ASIC or AMF government scam databases',
         severity: 'info',
         scoreOverride: 0,
+        messageKey: 'gov_not_flagged',
       });
       checks.push({
         label: 'Government databases (ASIC/AMF)',
@@ -614,7 +645,7 @@ export async function scanUrl(input: string): Promise<SafetyReport> {
       detail: isIpUrl ? 'Uses IP address instead of domain' : 'Uses a proper domain name',
     });
     if (isIpUrl) {
-      findings.push({ message: 'URL uses an IP address instead of a domain name', severity: 'high' });
+      findings.push({ message: 'URL uses an IP address instead of a domain name', severity: 'high', messageKey: 'ip_address_url' });
       recommendations.push('Legitimate sites rarely use raw IP addresses');
     }
   }

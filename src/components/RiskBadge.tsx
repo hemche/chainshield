@@ -1,3 +1,6 @@
+'use client';
+
+import { useTranslations } from 'next-intl';
 import { RiskLevel } from '@/types';
 
 interface RiskBadgeProps {
@@ -18,9 +21,11 @@ const sizeStyles = {
 };
 
 export default function RiskBadge({ level, size = 'md' }: RiskBadgeProps) {
+  const t = useTranslations('riskLevels');
+
   return (
     <span className={`inline-flex items-center font-bold rounded-full border shadow-sm ${styles[level]} ${sizeStyles[size]}`}>
-      {level}
+      {t(level)}
     </span>
   );
 }

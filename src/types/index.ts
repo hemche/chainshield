@@ -8,6 +8,8 @@ export interface Finding {
   message: string;
   severity: 'info' | 'low' | 'medium' | 'high' | 'danger';
   scoreOverride?: number;
+  messageKey?: string;
+  messageParams?: Record<string, string | number>;
 }
 
 export interface ScoreBreakdownItem {

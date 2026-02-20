@@ -24,8 +24,8 @@ export async function scanEns(ensName: string): Promise<SafetyReport> {
       ],
       nextStep: 'Verify the ENS name is spelled correctly and currently registered at app.ens.domains.',
       findings: [
-        { message: `ENS resolution failed: ${error}`, severity: 'medium' },
-        { message: 'Cannot assess wallet risk without a resolved address', severity: 'medium' },
+        { message: `ENS resolution failed: ${error}`, severity: 'medium', messageKey: 'ens_failed', messageParams: { error: error ?? 'Unknown error' } },
+        { message: 'Cannot assess wallet risk without a resolved address', severity: 'medium', messageKey: 'ens_no_address' },
       ],
       recommendations: [
         'Double-check the ENS name spelling',
@@ -65,6 +65,8 @@ export async function scanEns(ensName: string): Promise<SafetyReport> {
       message: `ENS name "${normalized}" resolves to ${address}`,
       severity: 'info' as const,
       scoreOverride: 0,
+      messageKey: 'ens_resolved',
+      messageParams: { name: normalized, address },
     },
     ...walletReport.findings,
   ];

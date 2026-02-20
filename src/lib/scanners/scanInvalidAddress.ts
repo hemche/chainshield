@@ -14,8 +14,8 @@ export async function scanInvalidAddress(input: string): Promise<SafetyReport> {
     ],
     nextStep: 'Double-check the address for typos. If you copied it, try copying again from the source.',
     findings: [
-      { message: 'Invalid address — checksum failed', severity: 'danger' },
-      { message: 'Sending funds to an invalid address could result in permanent loss', severity: 'danger' },
+      { message: 'Invalid address — checksum failed', severity: 'danger', messageKey: 'invalid_checksum' },
+      { message: 'Sending funds to an invalid address could result in permanent loss', severity: 'danger', messageKey: 'invalid_loss_warning' },
     ],
     recommendations: [
       'Double-check the address before sending funds. Funds sent to invalid addresses cannot be recovered.',

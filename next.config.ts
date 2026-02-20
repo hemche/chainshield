@@ -1,4 +1,7 @@
 import type { NextConfig } from "next";
+import createNextIntlPlugin from 'next-intl/plugin';
+
+const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
 
 const isDev = process.env.NODE_ENV === 'development';
 
@@ -19,7 +22,7 @@ const nextConfig: NextConfig = {
             `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
             "style-src 'self' 'unsafe-inline'",
             "img-src 'self' data:",
-            "font-src 'self'",
+            "font-src 'self' https://fonts.gstatic.com",
             "connect-src 'self' https://api.dexscreener.com https://api.gopluslabs.io https://sourcify.dev https://static.moneysmart.gov.au https://www.data.gouv.fr https://va.vercel-scripts.com",
             "frame-ancestors 'none'",
             "base-uri 'self'",
@@ -35,4 +38,4 @@ const nextConfig: NextConfig = {
   ],
 };
 
-export default nextConfig;
+export default withNextIntl(nextConfig);
